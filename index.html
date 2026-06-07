@@ -17,7 +17,7 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .pulse-live { animation: pulseLive 2s infinite; }
         @keyframes pulseLive { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .message-bubble { max-width: 85%; word-wrap: break-word; }
+        .admin-email-badge { background: rgba(16, 185, 129, 0.2); color: #10b981; }
     </style>
 </head>
 <body class="bg-zinc-950 min-h-screen">
@@ -38,7 +38,7 @@
                 </p>
             </div>
             <div class="flex items-center gap-3">
-                <span class="text-xs text-zinc-400" id="admin-email"></span>
+                <span class="text-xs px-2 py-1 rounded admin-email-badge" id="admin-email"></span>
                 <button onclick="adminLogout()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-600 text-white hover:bg-red-700">
                     <i class="fa-solid fa-right-from-bracket mr-1"></i>Déconnexion
                 </button>
@@ -48,10 +48,15 @@
 
     <!-- LOGIN -->
     <div id="admin-login" class="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 max-w-md mx-auto">
-        <h2 class="text-lg font-bold text-white mb-4 text-center">Connexion Administrateur</h2>
+        <h2 class="text-lg font-bold text-white mb-4 text-center">
+            <i class="fa-solid fa-shield-halved mr-2" style="color:#ff5722"></i>Connexion Administrateur
+        </h2>
+        <div id="login-error" class="hidden mb-3 p-3 rounded-lg bg-red-900/30 border border-red-500/50 text-xs text-red-300"></div>
         <input type="email" id="adminEmail" placeholder="Email admin" class="w-full bg-zinc-800 rounded-lg px-4 py-3 text-sm text-white mb-3 border border-zinc-700 focus:border-orange-500 focus:outline-none">
         <input type="password" id="adminPassword" placeholder="Mot de passe" class="w-full bg-zinc-800 rounded-lg px-4 py-3 text-sm text-white mb-4 border border-zinc-700 focus:border-orange-500 focus:outline-none">
-        <button onclick="adminLogin()" class="w-full py-3 rounded-lg text-sm font-bold text-white" style="background:#ff5722">Se connecter</button>
+        <button onclick="adminLogin()" id="btn-login" class="w-full py-3 rounded-lg text-sm font-bold text-white" style="background:#ff5722">
+            <i class="fa-solid fa-right-to-bracket mr-2"></i>Se connecter
+        </button>
     </div>
 
     <!-- DASHBOARD -->
@@ -64,9 +69,11 @@
             </button>
             <button onclick="showSection('albums')" id="tab-albums" class="px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap bg-zinc-800 text-zinc-400">
                 <i class="fa-solid fa-photo-film mr-1"></i>Albums
+                <span id="albums-count-badge" class="ml-1 px-1.5 py-0.5 rounded-full bg-zinc-700 text-white text-[9px] font-bold">0</span>
             </button>
             <button onclick="showSection('imams')" id="tab-imams" class="px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap bg-zinc-800 text-zinc-400">
                 <i class="fa-solid fa-users mr-1"></i>Imams
+                <span id="imams-count-badge" class="ml-1 px-1.5 py-0.5 rounded-full bg-zinc-700 text-white text-[9px] font-bold">0</span>
             </button>
             <button onclick="showSection('questions')" id="tab-questions" class="px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap bg-zinc-800 text-zinc-400">
                 <i class="fa-solid fa-comments mr-1"></i>Questions
@@ -145,7 +152,6 @@
             </div>
 
             <div class="grid md:grid-cols-2 gap-4">
-                <!-- Répartition stockage -->
                 <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
                     <h3 class="text-sm font-bold text-white mb-3"><i class="fa-solid fa-hard-drive mr-2" style="color:#ff5722"></i>Stockage par Imam</h3>
                     <div class="h-64">
@@ -153,7 +159,6 @@
                     </div>
                 </div>
 
-                <!-- Questions par album -->
                 <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
                     <h3 class="text-sm font-bold text-white mb-3"><i class="fa-solid fa-comments mr-2" style="color:#ff5722"></i>Questions par album</h3>
                     <div class="h-64">
@@ -242,7 +247,7 @@
 
 <script>
 // ============================================
-// 🔥 FIREBASE
+// 🔥 FIREBASE CONFIG
 // ============================================
 const firebaseConfig = {
     apiKey: "AIzaSyC3ybM8gMQZ-IjVLLXqs0MZLPEzqGmyREA",
@@ -257,6 +262,14 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 const storage = firebase.storage();
 
+// ============================================
+// 🔐 ADMIN EMAIL (MODIFIEZ ICI SI BESOIN)
+// ============================================
+const ADMIN_EMAIL = 'mimbaradmin@gmail.com';
+
+// ============================================
+// 📦 VARIABLES GLOBALES
+// ============================================
 let allAlbums = [];
 let allVideos = [];
 let allQuestions = [];
@@ -286,10 +299,21 @@ const TYPE_COLORS = {
 // 🔐 AUTH
 // ============================================
 auth.onAuthStateChanged(async (user) => {
+    console.log('🔐 État auth:', user ? user.email : 'Déconnecté');
+    
     if (user) {
+        // Vérifier si c'est bien l'admin
+        if (user.email !== ADMIN_EMAIL) {
+            showLoginError(`❌ Accès refusé. ${user.email} n'est pas un administrateur.`);
+            auth.signOut();
+            return;
+        }
+        
         document.getElementById('admin-login').classList.add('hidden');
         document.getElementById('admin-content').classList.remove('hidden');
         document.getElementById('admin-email').innerText = user.email;
+        
+        console.log('✅ Admin connecté, chargement des données...');
         startRealtimeSync();
     } else {
         document.getElementById('admin-login').classList.remove('hidden');
@@ -301,50 +325,112 @@ auth.onAuthStateChanged(async (user) => {
 async function adminLogin() {
     const email = document.getElementById('adminEmail').value.trim();
     const pwd = document.getElementById('adminPassword').value;
+    const btn = document.getElementById('btn-login');
+    
+    if (!email || !pwd) {
+        showLoginError("❌ Email et mot de passe requis");
+        return;
+    }
+    
+    btn.disabled = true;
+    btn.innerText = 'Connexion...';
+    
     try {
         await auth.signInWithEmailAndPassword(email, pwd);
-    } catch(e) { alert("Erreur: " + e.message); }
+        hideLoginError();
+    } catch(e) {
+        console.error("Erreur login:", e);
+        let msg = "Erreur de connexion";
+        switch(e.code) {
+            case 'auth/invalid-credential': msg = "❌ Email ou mot de passe incorrect"; break;
+            case 'auth/user-not-found': msg = "❌ Compte introuvable"; break;
+            case 'auth/wrong-password': msg = "❌ Mot de passe incorrect"; break;
+            case 'auth/too-many-requests': msg = "❌ Trop de tentatives. Réessayez plus tard"; break;
+            default: msg = `❌ ${e.message}`;
+        }
+        showLoginError(msg);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-right-to-bracket mr-2"></i>Se connecter';
+    }
 }
 
 function adminLogout() {
-    auth.signOut();
+    if (confirm('Se déconnecter ?')) {
+        auth.signOut();
+    }
+}
+
+function showLoginError(msg) {
+    const el = document.getElementById('login-error');
+    el.innerText = msg;
+    el.classList.remove('hidden');
+}
+
+function hideLoginError() {
+    document.getElementById('login-error').classList.add('hidden');
 }
 
 // ============================================
 // 🔄 SYNCHRONISATION TEMPS RÉEL
 // ============================================
 function startRealtimeSync() {
-    // Albums en temps réel
+    console.log('🔄 Démarrage synchronisation temps réel...');
+    
+    // Albums
     unsubscribeAlbums = db.collection('albums').onSnapshot((snapshot) => {
+        console.log('📁 Albums reçus:', snapshot.size);
         allAlbums = [];
-        snapshot.forEach(doc => allAlbums.push({ id: doc.id, ...doc.data() }));
+        snapshot.forEach(doc => {
+            allAlbums.push({ id: doc.id, ...doc.data() });
+        });
+        console.log('📁 Total albums:', allAlbums.length);
         updateAll();
-    }, (error) => console.error("Erreur albums:", error));
+    }, (error) => {
+        console.error("❌ Erreur albums:", error);
+        alert("Erreur de chargement des albums: " + error.message);
+    });
 
-    // Vidéos en temps réel
+    // Vidéos
     unsubscribeVideos = db.collection('videos').onSnapshot((snapshot) => {
+        console.log('🎥 Vidéos reçues:', snapshot.size);
         allVideos = [];
-        snapshot.forEach(doc => allVideos.push({ id: doc.id, ...doc.data() }));
+        snapshot.forEach(doc => {
+            allVideos.push({ id: doc.id, ...doc.data() });
+        });
+        console.log('🎥 Total vidéos:', allVideos.length);
         updateAll();
-    }, (error) => console.error("Erreur vidéos:", error));
+    }, (error) => {
+        console.error("❌ Erreur vidéos:", error);
+    });
 
-    // Questions en temps réel
+    // Questions
     unsubscribeQuestions = db.collection('questions').onSnapshot((snapshot) => {
+        console.log('❓ Questions reçues:', snapshot.size);
         allQuestions = [];
-        snapshot.forEach(doc => allQuestions.push({ id: doc.id, ...doc.data() }));
+        snapshot.forEach(doc => {
+            allQuestions.push({ id: doc.id, ...doc.data() });
+        });
+        console.log('❓ Total questions:', allQuestions.length);
         updateAll();
-    }, (error) => console.error("Erreur questions:", error));
+    }, (error) => {
+        console.error("❌ Erreur questions:", error);
+    });
 }
 
 function stopRealtimeSync() {
     if (unsubscribeAlbums) unsubscribeAlbums();
     if (unsubscribeVideos) unsubscribeVideos();
     if (unsubscribeQuestions) unsubscribeQuestions();
+    unsubscribeAlbums = null;
+    unsubscribeVideos = null;
+    unsubscribeQuestions = null;
 }
 
 function updateAll() {
     updateDashboard();
-    updateQuestionsBadge();
+    updateBadges();
+    
     if (currentSection === 'dashboard') {
         renderCharts();
         renderPendingPreview();
@@ -355,13 +441,23 @@ function updateAll() {
     if (currentSection === 'questions') renderQuestions();
 }
 
-function updateQuestionsBadge() {
+function updateBadges() {
+    // Badge questions
     const pendingCount = allQuestions.filter(q => q.status === 'pending').length;
-    const badge = document.getElementById('questions-badge');
-    if (badge) {
-        badge.innerText = pendingCount;
-        badge.style.display = pendingCount > 0 ? 'inline-block' : 'none';
+    const qBadge = document.getElementById('questions-badge');
+    if (qBadge) {
+        qBadge.innerText = pendingCount;
+        qBadge.style.display = pendingCount > 0 ? 'inline-block' : 'none';
     }
+    
+    // Badge albums
+    const albumsBadge = document.getElementById('albums-count-badge');
+    if (albumsBadge) albumsBadge.innerText = allAlbums.length;
+    
+    // Badge imams
+    const uniqueImams = new Set(allAlbums.map(a => a.userId));
+    const imamsBadge = document.getElementById('imams-count-badge');
+    if (imamsBadge) imamsBadge.innerText = uniqueImams.size;
 }
 
 // ============================================
@@ -380,7 +476,6 @@ function updateDashboard() {
     const suspended = allAlbums.filter(a => a.suspended).length;
     document.getElementById('stat-suspended').innerText = suspended;
     
-    // Stats questions
     document.getElementById('stat-questions').innerText = allQuestions.length;
     const pendingQ = allQuestions.filter(q => q.status === 'pending').length;
     document.getElementById('stat-pending-questions').innerText = pendingQ;
@@ -395,11 +490,11 @@ function renderPendingPreview() {
     if (pending.length === 0) {
         preview.innerHTML = '<p class="text-center text-zinc-500 text-xs py-4">Aucun album en attente</p>';
     } else {
-        preview.innerHTML = pending.slice(0, 3).map(a => `
+        preview.innerHTML = pending.slice(0, 5).map(a => `
             <div class="bg-zinc-800 rounded-lg p-3 flex items-center justify-between cursor-pointer hover:bg-zinc-700" onclick="openAlbumModal('${a.id}')">
                 <div>
-                    <p class="text-xs font-bold text-white">${a.imamName || 'Sans nom'}</p>
-                    <p class="text-[10px] text-zinc-400">${a.city}, ${a.country}</p>
+                    <p class="text-xs font-bold text-white">${escapeHtml(a.imamName || 'Sans nom')}</p>
+                    <p class="text-[10px] text-zinc-400">${escapeHtml(a.city || '')}, ${escapeHtml(a.country || '')}</p>
                 </div>
                 <i class="fa-solid fa-chevron-right text-zinc-500"></i>
             </div>
@@ -415,7 +510,7 @@ function renderRecentQuestionsPreview() {
             const tb = b.timestamp ? b.timestamp.toDate() : new Date(0);
             return tb - ta;
         })
-        .slice(0, 3);
+        .slice(0, 5);
     
     const preview = document.getElementById('recent-questions-preview');
     if (pending.length === 0) {
@@ -459,6 +554,10 @@ function renderTypeChart() {
         typeCount[type] = (typeCount[type] || 0) + 1;
     });
     
+    if (Object.keys(typeCount).length === 0) {
+        typeCount['Aucun'] = 1;
+    }
+    
     charts.type = new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -495,6 +594,10 @@ function renderImamsChart() {
     });
     
     const sorted = Object.entries(imamViews).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    
+    if (sorted.length === 0) {
+        sorted.push(['Aucune donnée', 0]);
+    }
     
     charts.imams = new Chart(ctx, {
         type: 'bar',
@@ -534,7 +637,11 @@ function renderStorageChart() {
         }
     });
     
-    const sorted = Object.entries(imamStorage).sort((a, b) => b[1] - a[1]);
+    const sorted = Object.entries(imamStorage).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    
+    if (sorted.length === 0) {
+        sorted.push(['Aucune donnée', 0]);
+    }
     
     charts.storage = new Chart(ctx, {
         type: 'bar',
@@ -577,6 +684,10 @@ function renderQuestionsChart() {
     
     const sorted = Object.entries(albumQuestions).sort((a, b) => b[1] - a[1]).slice(0, 5);
     
+    if (sorted.length === 0) {
+        sorted.push(['Aucune question', 0]);
+    }
+    
     charts.questions = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -607,6 +718,8 @@ function renderAlbums() {
     const container = document.getElementById('albums-list');
     let filtered = currentAlbumFilter === 'all' ? allAlbums : allAlbums.filter(a => a.status === currentAlbumFilter);
     
+    console.log(`📁 Rendu albums: ${filtered.length} (filtre: ${currentAlbumFilter})`);
+    
     if (filtered.length === 0) {
         container.innerHTML = '<div class="text-center text-zinc-500 py-8 text-xs">Aucun album</div>';
         return;
@@ -623,17 +736,17 @@ function renderAlbums() {
             <div class="flex items-start justify-between">
                 <div class="flex-1">
                     <div class="flex items-center gap-2 mb-1">
-                        <h3 class="text-sm font-bold text-white">${a.imamName || 'Sans nom'}</h3>
+                        <h3 class="text-sm font-bold text-white">${escapeHtml(a.imamName || 'Sans nom')}</h3>
                         ${a.suspended ? '<span class="px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 text-[9px] font-bold">SUSPENDU</span>' : ''}
                     </div>
-                    <p class="text-xs text-zinc-400"><i class="fa-solid fa-location-dot mr-1"></i>${a.city || ''}, ${a.country || ''}</p>
+                    <p class="text-xs text-zinc-400"><i class="fa-solid fa-location-dot mr-1"></i>${escapeHtml(a.city || '')}, ${escapeHtml(a.country || '')}</p>
                     <p class="text-xs mt-1" style="color:#ff5722">${TYPE_LABELS[a.type] || a.type || 'Non spécifié'}</p>
                 </div>
                 <span class="px-2 py-1 rounded text-[9px] font-bold ${a.status === 'pending' ? 'bg-yellow-500 text-zinc-950' : a.status === 'approved' ? 'bg-emerald-500 text-zinc-950' : 'bg-red-500 text-white'}">
                     ${a.status === 'pending' ? ' EN ATTENTE' : a.status === 'approved' ? '✅ APPROUVÉ' : '❌ REJETÉ'}
                 </span>
             </div>
-            <div class="flex gap-4 mt-3 text-[10px] text-zinc-500">
+            <div class="flex gap-4 mt-3 text-[10px] text-zinc-500 flex-wrap">
                 <span><i class="fa-solid fa-video"></i> ${videoCount} vidéos</span>
                 <span><i class="fa-regular fa-eye"></i> ${totalViews} vues</span>
                 <span><i class="fa-solid fa-hard-drive"></i> ${(storage / 1024 / 1024).toFixed(1)} Mo</span>
@@ -674,10 +787,10 @@ function openAlbumModal(albumId) {
     const content = document.getElementById('album-modal-content');
     content.innerHTML = `
         <div class="bg-zinc-800 rounded-lg p-3 space-y-2">
-            <h4 class="text-sm font-bold text-white">${album.imamName || 'Sans nom'}</h4>
-            <p class="text-xs text-zinc-400"><i class="fa-solid fa-location-dot mr-1"></i>${album.city || ''}, ${album.country || ''}</p>
+            <h4 class="text-sm font-bold text-white">${escapeHtml(album.imamName || 'Sans nom')}</h4>
+            <p class="text-xs text-zinc-400"><i class="fa-solid fa-location-dot mr-1"></i>${escapeHtml(album.city || '')}, ${escapeHtml(album.country || '')}</p>
             <p class="text-xs" style="color:#ff5722">${TYPE_LABELS[album.type] || album.type || 'Non spécifié'}</p>
-            ${album.description ? `<p class="text-xs text-zinc-400 mt-2">${album.description}</p>` : ''}
+            ${album.description ? `<p class="text-xs text-zinc-400 mt-2">${escapeHtml(album.description)}</p>` : ''}
         </div>
         
         <div class="grid grid-cols-2 gap-2">
@@ -712,14 +825,14 @@ function openAlbumModal(albumId) {
         
         <div class="bg-zinc-800 rounded-lg p-3">
             <p class="text-[9px] text-zinc-500 uppercase mb-1">Utilisateur</p>
-            <p class="text-xs text-zinc-400">${album.userId || 'N/A'}</p>
-            ${album.userEmail ? `<p class="text-xs text-zinc-400 mt-1">📧 ${album.userEmail}</p>` : ''}
+            <p class="text-xs text-zinc-400 break-all">${album.userId || 'N/A'}</p>
+            ${album.userEmail ? `<p class="text-xs text-zinc-400 mt-1">📧 ${escapeHtml(album.userEmail)}</p>` : ''}
         </div>
         
         ${album.rejectionReason ? `
         <div class="bg-red-900/20 border border-red-500/30 rounded-lg p-3">
             <p class="text-[9px] text-red-400 uppercase mb-1">Raison du rejet</p>
-            <p class="text-xs text-red-300">${album.rejectionReason}</p>
+            <p class="text-xs text-red-300">${escapeHtml(album.rejectionReason)}</p>
         </div>
         ` : ''}
         
@@ -777,7 +890,6 @@ async function deleteAlbum(albumId) {
         for (const v of videos) {
             await db.collection('videos').doc(v.id).delete();
         }
-        // Supprimer aussi les questions liées
         const questions = allQuestions.filter(q => q.albumId === albumId);
         for (const q of questions) {
             await db.collection('questions').doc(q.id).delete();
@@ -801,13 +913,19 @@ function renderImams() {
         }
         imamMap[a.userId].albums.push(a);
         if (!imamMap[a.userId].imamName) imamMap[a.userId].imamName = a.imamName;
+        if (!imamMap[a.userId].userEmail) imamMap[a.userId].userEmail = a.userEmail;
     });
     
     let imams = Object.values(imamMap);
     
     if (search) {
-        imams = imams.filter(i => (i.imamName || '').toLowerCase().includes(search));
+        imams = imams.filter(i => 
+            (i.imamName || '').toLowerCase().includes(search) ||
+            (i.userEmail || '').toLowerCase().includes(search)
+        );
     }
+    
+    console.log(`👥 Rendu imams: ${imams.length}`);
     
     if (imams.length === 0) {
         container.innerHTML = '<div class="text-center text-zinc-500 py-8 text-xs">Aucun imam</div>';
@@ -829,9 +947,10 @@ function renderImams() {
                     </div>
                     <div class="flex-1">
                         <div class="flex items-center gap-2">
-                            <h3 class="text-sm font-bold text-white">${i.imamName || 'Inconnu'}</h3>
+                            <h3 class="text-sm font-bold text-white">${escapeHtml(i.imamName || 'Inconnu')}</h3>
                             ${isSuspended ? '<span class="px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 text-[9px] font-bold">SUSPENDU</span>' : '<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[9px] font-bold">ACTIF</span>'}
                         </div>
+                        ${i.userEmail ? `<p class="text-[10px] text-zinc-500 mt-0.5">📧 ${escapeHtml(i.userEmail)}</p>` : ''}
                         <p class="text-xs text-zinc-400 mt-1">${i.albums.length} album(s) · ${totalVideos} vidéos · ${totalViews} vues · ${totalQuestions} questions</p>
                         <div class="flex gap-2 mt-2 flex-wrap">
                             ${i.albums.map(a => `
@@ -894,12 +1013,13 @@ function renderQuestions() {
         });
     }
     
-    // Trier par date (plus récent en premier)
     filtered.sort((a, b) => {
         const ta = a.timestamp ? a.timestamp.toDate() : new Date(0);
         const tb = b.timestamp ? b.timestamp.toDate() : new Date(0);
         return tb - ta;
     });
+    
+    console.log(`❓ Rendu questions: ${filtered.length}`);
     
     if (filtered.length === 0) {
         container.innerHTML = '<div class="text-center text-zinc-500 py-8 text-xs">Aucune question</div>';
@@ -1046,10 +1166,7 @@ function openAnswerModal(questionId) {
         </div>
     `;
     
-    // Si déjà une réponse audio, l'afficher
     if (question.answerAudio) {
-        currentAnswerAudioBlob = null; // On ne peut pas re-télécharger facilement
-        // On affiche juste l'audio existant
         setTimeout(() => {
             const preview = document.getElementById('answer-audio-preview');
             const element = document.getElementById('answer-audio-element');
@@ -1088,7 +1205,6 @@ async function startAnswerRecording() {
             document.getElementById('answer-audio-element').src = audioUrl;
             document.getElementById('answer-audio-preview').classList.remove('hidden');
             document.getElementById('answer-recording-ui').classList.add('hidden');
-            
             stream.getTracks().forEach(track => track.stop());
         };
         
@@ -1154,7 +1270,6 @@ async function sendAnswer() {
             answeredAt: firebase.firestore.FieldValue.serverTimestamp()
         };
         
-        // Upload audio si présent
         if (currentAnswerAudioBlob) {
             const question = allQuestions.find(q => q.id === currentAnswerQuestionId);
             const audioRef = storage.ref(`questions/${question.albumId}/${Date.now()}_answer.mp3`);
