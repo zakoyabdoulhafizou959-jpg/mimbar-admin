@@ -7,7 +7,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -15,9 +14,6 @@
         .modal-overlay { backdrop-filter: blur(4px); }
         .fade-in { animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .pulse-live { animation: pulseLive 2s infinite; }
-        @keyframes pulseLive { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .admin-email-badge { background: rgba(16, 185, 129, 0.2); color: #10b981; }
     </style>
 </head>
 <body class="bg-zinc-950 min-h-screen">
@@ -29,16 +25,10 @@
         <div class="flex items-center justify-between flex-wrap gap-4">
             <div>
                 <h1 class="text-2xl font-black text-white">MinbarStream <span style="color:#ff5722">Admin</span></h1>
-                <p class="text-xs text-zinc-400 mt-1">
-                    Tableau de bord de gestion
-                    <span class="ml-2 inline-flex items-center gap-1 text-emerald-400">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-live"></span>
-                        En direct
-                    </span>
-                </p>
+                <p class="text-xs text-zinc-400 mt-1">Tableau de bord de gestion</p>
             </div>
             <div class="flex items-center gap-3">
-                <span class="text-xs px-2 py-1 rounded admin-email-badge" id="admin-email"></span>
+                <span class="text-xs text-zinc-400" id="admin-email"></span>
                 <button onclick="adminLogout()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-600 text-white hover:bg-red-700">
                     <i class="fa-solid fa-right-from-bracket mr-1"></i>Déconnexion
                 </button>
@@ -48,15 +38,10 @@
 
     <!-- LOGIN -->
     <div id="admin-login" class="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 max-w-md mx-auto">
-        <h2 class="text-lg font-bold text-white mb-4 text-center">
-            <i class="fa-solid fa-shield-halved mr-2" style="color:#ff5722"></i>Connexion Administrateur
-        </h2>
-        <div id="login-error" class="hidden mb-3 p-3 rounded-lg bg-red-900/30 border border-red-500/50 text-xs text-red-300"></div>
+        <h2 class="text-lg font-bold text-white mb-4 text-center">Connexion Administrateur</h2>
         <input type="email" id="adminEmail" placeholder="Email admin" class="w-full bg-zinc-800 rounded-lg px-4 py-3 text-sm text-white mb-3 border border-zinc-700 focus:border-orange-500 focus:outline-none">
         <input type="password" id="adminPassword" placeholder="Mot de passe" class="w-full bg-zinc-800 rounded-lg px-4 py-3 text-sm text-white mb-4 border border-zinc-700 focus:border-orange-500 focus:outline-none">
-        <button onclick="adminLogin()" id="btn-login" class="w-full py-3 rounded-lg text-sm font-bold text-white" style="background:#ff5722">
-            <i class="fa-solid fa-right-to-bracket mr-2"></i>Se connecter
-        </button>
+        <button onclick="adminLogin()" class="w-full py-3 rounded-lg text-sm font-bold text-white" style="background:#ff5722">Se connecter</button>
     </div>
 
     <!-- DASHBOARD -->
@@ -69,22 +54,16 @@
             </button>
             <button onclick="showSection('albums')" id="tab-albums" class="px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap bg-zinc-800 text-zinc-400">
                 <i class="fa-solid fa-photo-film mr-1"></i>Albums
-                <span id="albums-count-badge" class="ml-1 px-1.5 py-0.5 rounded-full bg-zinc-700 text-white text-[9px] font-bold">0</span>
             </button>
             <button onclick="showSection('imams')" id="tab-imams" class="px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap bg-zinc-800 text-zinc-400">
                 <i class="fa-solid fa-users mr-1"></i>Imams
-                <span id="imams-count-badge" class="ml-1 px-1.5 py-0.5 rounded-full bg-zinc-700 text-white text-[9px] font-bold">0</span>
-            </button>
-            <button onclick="showSection('questions')" id="tab-questions" class="px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap bg-zinc-800 text-zinc-400">
-                <i class="fa-solid fa-comments mr-1"></i>Questions
-                <span id="questions-badge" class="ml-1 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[9px] font-bold">0</span>
             </button>
         </div>
 
         <!-- SECTION DASHBOARD -->
         <div id="section-dashboard" class="space-y-6 fade-in">
             <!-- Stats Cards -->
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
                     <div class="flex items-center justify-between mb-2">
                         <i class="fa-solid fa-photo-film text-2xl" style="color:#ff5722"></i>
@@ -123,15 +102,6 @@
                     <p class="text-2xl font-black text-white" id="stat-imams">0</p>
                     <p class="text-[10px] text-zinc-500 mt-1"><span id="stat-suspended" class="text-red-400">0</span> suspendus</p>
                 </div>
-
-                <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
-                    <div class="flex items-center justify-between mb-2">
-                        <i class="fa-solid fa-comments text-2xl text-blue-500"></i>
-                        <span class="text-[10px] text-emerald-400 font-bold">QUESTIONS</span>
-                    </div>
-                    <p class="text-2xl font-black text-white" id="stat-questions">0</p>
-                    <p class="text-[10px] text-zinc-500 mt-1"><span id="stat-pending-questions" class="text-yellow-400">0</span> en attente</p>
-                </div>
             </div>
 
             <!-- Graphiques -->
@@ -151,19 +121,11 @@
                 </div>
             </div>
 
-            <div class="grid md:grid-cols-2 gap-4">
-                <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
-                    <h3 class="text-sm font-bold text-white mb-3"><i class="fa-solid fa-hard-drive mr-2" style="color:#ff5722"></i>Stockage par Imam</h3>
-                    <div class="h-64">
-                        <canvas id="chart-storage"></canvas>
-                    </div>
-                </div>
-
-                <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
-                    <h3 class="text-sm font-bold text-white mb-3"><i class="fa-solid fa-comments mr-2" style="color:#ff5722"></i>Questions par album</h3>
-                    <div class="h-64">
-                        <canvas id="chart-questions"></canvas>
-                    </div>
+            <!-- Répartition stockage -->
+            <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
+                <h3 class="text-sm font-bold text-white mb-3"><i class="fa-solid fa-hard-drive mr-2" style="color:#ff5722"></i>Répartition du stockage par Imam</h3>
+                <div class="h-64">
+                    <canvas id="chart-storage"></canvas>
                 </div>
             </div>
 
@@ -171,12 +133,6 @@
             <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
                 <h3 class="text-sm font-bold text-white mb-3"><i class="fa-solid fa-clock mr-2 text-yellow-500"></i>Albums en attente de validation</h3>
                 <div id="pending-preview" class="space-y-2"></div>
-            </div>
-
-            <!-- Questions récentes -->
-            <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
-                <h3 class="text-sm font-bold text-white mb-3"><i class="fa-solid fa-message mr-2 text-blue-500"></i>Questions récentes non répondues</h3>
-                <div id="recent-questions-preview" class="space-y-2"></div>
             </div>
         </div>
 
@@ -200,54 +156,26 @@
             </div>
             <div id="imams-list" class="space-y-3"></div>
         </div>
-
-        <!-- SECTION QUESTIONS -->
-        <div id="section-questions" class="hidden space-y-4 fade-in">
-            <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
-                <div class="flex gap-2 flex-wrap items-center justify-between">
-                    <div class="flex gap-2 flex-wrap">
-                        <button onclick="filterQuestions('all')" id="q-filter-all" class="px-3 py-1.5 rounded-lg text-xs font-bold" style="background:#ff5722">Toutes</button>
-                        <button onclick="filterQuestions('pending')" id="q-filter-pending" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-zinc-800 text-zinc-400">En attente</button>
-                        <button onclick="filterQuestions('answered')" id="q-filter-answered" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-zinc-800 text-zinc-400">Répondues</button>
-                    </div>
-                    <input type="text" id="question-search" oninput="renderQuestions()" placeholder="🔍 Rechercher..." class="bg-zinc-800 rounded-lg px-3 py-1.5 text-xs text-white border border-zinc-700 focus:outline-none focus:border-orange-500">
-                </div>
-            </div>
-
-            <div id="questions-list" class="space-y-3"></div>
-        </div>
     </div>
 </div>
 
 <!-- MODAL DÉTAILS ALBUM -->
 <div id="album-modal" class="hidden fixed inset-0 bg-black/80 modal-overlay z-50 flex items-center justify-center p-4">
-    <div class="bg-zinc-900 rounded-2xl p-6 w-full max-w-md border border-zinc-800 fade-in max-h-[90vh] overflow-y-auto">
+    <div class="bg-zinc-900 rounded-2xl p-6 w-full max-w-md border border-zinc-800 fade-in">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-base font-bold text-white">Détails de l'album</h3>
             <button onclick="closeAlbumModal()" class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
+        
         <div id="album-modal-content" class="space-y-3"></div>
-    </div>
-</div>
-
-<!-- MODAL RÉPONSE QUESTION -->
-<div id="answer-modal" class="hidden fixed inset-0 bg-black/80 modal-overlay z-50 flex items-center justify-center p-4">
-    <div class="bg-zinc-900 rounded-2xl p-6 w-full max-w-lg border border-zinc-800 fade-in max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-base font-bold text-white"><i class="fa-solid fa-reply mr-2" style="color:#ff5722"></i>Répondre à la question</h3>
-            <button onclick="closeAnswerModal()" class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
-        <div id="answer-modal-content" class="space-y-3"></div>
     </div>
 </div>
 
 <script>
 // ============================================
-// 🔥 FIREBASE CONFIG
+// 🔥 FIREBASE
 // ============================================
 const firebaseConfig = {
     apiKey: "AIzaSyC3ybM8gMQZ-IjVLLXqs0MZLPEzqGmyREA",
@@ -260,26 +188,12 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
-const storage = firebase.storage();
 
-// ============================================
-// 🔐 ADMIN EMAIL (MODIFIEZ ICI SI BESOIN)
-// ============================================
-const ADMIN_EMAIL = 'mimbaradmin@gmail.com';
-
-// ============================================
-// 📦 VARIABLES GLOBALES
-// ============================================
 let allAlbums = [];
 let allVideos = [];
-let allQuestions = [];
 let currentAlbumFilter = 'all';
-let currentQuestionFilter = 'all';
 let currentSection = 'dashboard';
 let charts = {};
-let unsubscribeAlbums = null;
-let unsubscribeVideos = null;
-let unsubscribeQuestions = null;
 
 const TYPE_LABELS = {
     'preche': '📢 Prêche quotidien',
@@ -299,170 +213,49 @@ const TYPE_COLORS = {
 // 🔐 AUTH
 // ============================================
 auth.onAuthStateChanged(async (user) => {
-    console.log('🔐 État auth:', user ? user.email : 'Déconnecté');
-    
     if (user) {
-        // Vérifier si c'est bien l'admin
-        if (user.email !== ADMIN_EMAIL) {
-            showLoginError(`❌ Accès refusé. ${user.email} n'est pas un administrateur.`);
-            auth.signOut();
-            return;
-        }
-        
         document.getElementById('admin-login').classList.add('hidden');
         document.getElementById('admin-content').classList.remove('hidden');
         document.getElementById('admin-email').innerText = user.email;
-        
-        console.log('✅ Admin connecté, chargement des données...');
-        startRealtimeSync();
+        await loadData();
     } else {
         document.getElementById('admin-login').classList.remove('hidden');
         document.getElementById('admin-content').classList.add('hidden');
-        stopRealtimeSync();
     }
 });
 
 async function adminLogin() {
     const email = document.getElementById('adminEmail').value.trim();
     const pwd = document.getElementById('adminPassword').value;
-    const btn = document.getElementById('btn-login');
-    
-    if (!email || !pwd) {
-        showLoginError("❌ Email et mot de passe requis");
-        return;
-    }
-    
-    btn.disabled = true;
-    btn.innerText = 'Connexion...';
-    
     try {
         await auth.signInWithEmailAndPassword(email, pwd);
-        hideLoginError();
-    } catch(e) {
-        console.error("Erreur login:", e);
-        let msg = "Erreur de connexion";
-        switch(e.code) {
-            case 'auth/invalid-credential': msg = "❌ Email ou mot de passe incorrect"; break;
-            case 'auth/user-not-found': msg = "❌ Compte introuvable"; break;
-            case 'auth/wrong-password': msg = "❌ Mot de passe incorrect"; break;
-            case 'auth/too-many-requests': msg = "❌ Trop de tentatives. Réessayez plus tard"; break;
-            default: msg = `❌ ${e.message}`;
-        }
-        showLoginError(msg);
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-right-to-bracket mr-2"></i>Se connecter';
-    }
+    } catch(e) { alert("Erreur: " + e.message); }
 }
 
 function adminLogout() {
-    if (confirm('Se déconnecter ?')) {
-        auth.signOut();
-    }
-}
-
-function showLoginError(msg) {
-    const el = document.getElementById('login-error');
-    el.innerText = msg;
-    el.classList.remove('hidden');
-}
-
-function hideLoginError() {
-    document.getElementById('login-error').classList.add('hidden');
+    auth.signOut();
 }
 
 // ============================================
-// 🔄 SYNCHRONISATION TEMPS RÉEL
+// 📚 DONNÉES
 // ============================================
-function startRealtimeSync() {
-    console.log('🔄 Démarrage synchronisation temps réel...');
-    
-    // Albums
-    unsubscribeAlbums = db.collection('albums').onSnapshot((snapshot) => {
-        console.log('📁 Albums reçus:', snapshot.size);
+async function loadData() {
+    try {
+        const albumsSnap = await db.collection('albums').get();
         allAlbums = [];
-        snapshot.forEach(doc => {
-            allAlbums.push({ id: doc.id, ...doc.data() });
-        });
-        console.log('📁 Total albums:', allAlbums.length);
-        updateAll();
-    }, (error) => {
-        console.error("❌ Erreur albums:", error);
-        alert("Erreur de chargement des albums: " + error.message);
-    });
-
-    // Vidéos
-    unsubscribeVideos = db.collection('videos').onSnapshot((snapshot) => {
-        console.log('🎥 Vidéos reçues:', snapshot.size);
+        albumsSnap.forEach(doc => allAlbums.push({ id: doc.id, ...doc.data() }));
+        
+        const videosSnap = await db.collection('videos').get();
         allVideos = [];
-        snapshot.forEach(doc => {
-            allVideos.push({ id: doc.id, ...doc.data() });
-        });
-        console.log('🎥 Total vidéos:', allVideos.length);
-        updateAll();
-    }, (error) => {
-        console.error("❌ Erreur vidéos:", error);
-    });
-
-    // Questions
-    unsubscribeQuestions = db.collection('questions').onSnapshot((snapshot) => {
-        console.log('❓ Questions reçues:', snapshot.size);
-        allQuestions = [];
-        snapshot.forEach(doc => {
-            allQuestions.push({ id: doc.id, ...doc.data() });
-        });
-        console.log('❓ Total questions:', allQuestions.length);
-        updateAll();
-    }, (error) => {
-        console.error("❌ Erreur questions:", error);
-    });
-}
-
-function stopRealtimeSync() {
-    if (unsubscribeAlbums) unsubscribeAlbums();
-    if (unsubscribeVideos) unsubscribeVideos();
-    if (unsubscribeQuestions) unsubscribeQuestions();
-    unsubscribeAlbums = null;
-    unsubscribeVideos = null;
-    unsubscribeQuestions = null;
-}
-
-function updateAll() {
-    updateDashboard();
-    updateBadges();
-    
-    if (currentSection === 'dashboard') {
+        videosSnap.forEach(doc => allVideos.push({ id: doc.id, ...doc.data() }));
+        
+        updateDashboard();
+        renderAlbums();
+        renderImams();
         renderCharts();
-        renderPendingPreview();
-        renderRecentQuestionsPreview();
-    }
-    if (currentSection === 'albums') renderAlbums();
-    if (currentSection === 'imams') renderImams();
-    if (currentSection === 'questions') renderQuestions();
+    } catch(e) { console.error(e); }
 }
 
-function updateBadges() {
-    // Badge questions
-    const pendingCount = allQuestions.filter(q => q.status === 'pending').length;
-    const qBadge = document.getElementById('questions-badge');
-    if (qBadge) {
-        qBadge.innerText = pendingCount;
-        qBadge.style.display = pendingCount > 0 ? 'inline-block' : 'none';
-    }
-    
-    // Badge albums
-    const albumsBadge = document.getElementById('albums-count-badge');
-    if (albumsBadge) albumsBadge.innerText = allAlbums.length;
-    
-    // Badge imams
-    const uniqueImams = new Set(allAlbums.map(a => a.userId));
-    const imamsBadge = document.getElementById('imams-count-badge');
-    if (imamsBadge) imamsBadge.innerText = uniqueImams.size;
-}
-
-// ============================================
-// 📊 DASHBOARD
-// ============================================
 function updateDashboard() {
     document.getElementById('stat-albums').innerText = allAlbums.length;
     document.getElementById('stat-videos').innerText = allVideos.length;
@@ -476,59 +269,24 @@ function updateDashboard() {
     const suspended = allAlbums.filter(a => a.suspended).length;
     document.getElementById('stat-suspended').innerText = suspended;
     
-    document.getElementById('stat-questions').innerText = allQuestions.length;
-    const pendingQ = allQuestions.filter(q => q.status === 'pending').length;
-    document.getElementById('stat-pending-questions').innerText = pendingQ;
-    
     const progress = (allAlbums.length / 20) * 100;
     document.getElementById('albums-progress').style.width = `${Math.min(progress, 100)}%`;
-}
-
-function renderPendingPreview() {
+    
+    // Aperçu albums en attente
     const pending = allAlbums.filter(a => a.status === 'pending');
     const preview = document.getElementById('pending-preview');
     if (pending.length === 0) {
         preview.innerHTML = '<p class="text-center text-zinc-500 text-xs py-4">Aucun album en attente</p>';
     } else {
-        preview.innerHTML = pending.slice(0, 5).map(a => `
+        preview.innerHTML = pending.slice(0, 3).map(a => `
             <div class="bg-zinc-800 rounded-lg p-3 flex items-center justify-between cursor-pointer hover:bg-zinc-700" onclick="openAlbumModal('${a.id}')">
                 <div>
-                    <p class="text-xs font-bold text-white">${escapeHtml(a.imamName || 'Sans nom')}</p>
-                    <p class="text-[10px] text-zinc-400">${escapeHtml(a.city || '')}, ${escapeHtml(a.country || '')}</p>
+                    <p class="text-xs font-bold text-white">${a.imamName || 'Sans nom'}</p>
+                    <p class="text-[10px] text-zinc-400">${a.city}, ${a.country}</p>
                 </div>
                 <i class="fa-solid fa-chevron-right text-zinc-500"></i>
             </div>
         `).join('');
-    }
-}
-
-function renderRecentQuestionsPreview() {
-    const pending = allQuestions
-        .filter(q => q.status === 'pending')
-        .sort((a, b) => {
-            const ta = a.timestamp ? a.timestamp.toDate() : new Date(0);
-            const tb = b.timestamp ? b.timestamp.toDate() : new Date(0);
-            return tb - ta;
-        })
-        .slice(0, 5);
-    
-    const preview = document.getElementById('recent-questions-preview');
-    if (pending.length === 0) {
-        preview.innerHTML = '<p class="text-center text-zinc-500 text-xs py-4">Aucune question en attente</p>';
-    } else {
-        preview.innerHTML = pending.map(q => {
-            const album = allAlbums.find(a => a.id === q.albumId);
-            return `
-                <div class="bg-zinc-800 rounded-lg p-3 cursor-pointer hover:bg-zinc-700" onclick="openAnswerModal('${q.id}')">
-                    <div class="flex items-center justify-between mb-1">
-                        <span class="text-[10px] font-bold text-orange-400">${escapeHtml(q.userName || 'Anonyme')}</span>
-                        <span class="text-[9px] text-zinc-500">${q.timestamp ? new Date(q.timestamp.toDate()).toLocaleString('fr-FR') : ''}</span>
-                    </div>
-                    <p class="text-xs text-white truncate">${escapeHtml(q.questionText || '🎤 Question vocale')}</p>
-                    <p class="text-[9px] text-zinc-500 mt-1"><i class="fa-solid fa-photo-film mr-1"></i>${album?.imamName || 'Album inconnu'}</p>
-                </div>
-            `;
-        }).join('');
     }
 }
 
@@ -539,7 +297,6 @@ function renderCharts() {
     renderTypeChart();
     renderImamsChart();
     renderStorageChart();
-    renderQuestionsChart();
 }
 
 function renderTypeChart() {
@@ -553,10 +310,6 @@ function renderTypeChart() {
         const type = a.type || 'inconnu';
         typeCount[type] = (typeCount[type] || 0) + 1;
     });
-    
-    if (Object.keys(typeCount).length === 0) {
-        typeCount['Aucun'] = 1;
-    }
     
     charts.type = new Chart(ctx, {
         type: 'doughnut',
@@ -594,10 +347,6 @@ function renderImamsChart() {
     });
     
     const sorted = Object.entries(imamViews).sort((a, b) => b[1] - a[1]).slice(0, 5);
-    
-    if (sorted.length === 0) {
-        sorted.push(['Aucune donnée', 0]);
-    }
     
     charts.imams = new Chart(ctx, {
         type: 'bar',
@@ -637,11 +386,7 @@ function renderStorageChart() {
         }
     });
     
-    const sorted = Object.entries(imamStorage).sort((a, b) => b[1] - a[1]).slice(0, 10);
-    
-    if (sorted.length === 0) {
-        sorted.push(['Aucune donnée', 0]);
-    }
+    const sorted = Object.entries(imamStorage).sort((a, b) => b[1] - a[1]);
     
     charts.storage = new Chart(ctx, {
         type: 'bar',
@@ -667,58 +412,12 @@ function renderStorageChart() {
     });
 }
 
-function renderQuestionsChart() {
-    const ctx = document.getElementById('chart-questions');
-    if (!ctx) return;
-    
-    if (charts.questions) charts.questions.destroy();
-    
-    const albumQuestions = {};
-    allQuestions.forEach(q => {
-        const album = allAlbums.find(a => a.id === q.albumId);
-        if (album) {
-            const name = album.imamName || 'Inconnu';
-            albumQuestions[name] = (albumQuestions[name] || 0) + 1;
-        }
-    });
-    
-    const sorted = Object.entries(albumQuestions).sort((a, b) => b[1] - a[1]).slice(0, 5);
-    
-    if (sorted.length === 0) {
-        sorted.push(['Aucune question', 0]);
-    }
-    
-    charts.questions = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: sorted.map(([name]) => name.length > 15 ? name.substring(0, 15) + '...' : name),
-            datasets: [{
-                label: 'Questions',
-                data: sorted.map(([, count]) => count),
-                backgroundColor: '#3b82f6',
-                borderRadius: 6
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                x: { ticks: { color: '#71717a', font: { size: 9 } }, grid: { display: false } },
-                y: { ticks: { color: '#71717a' }, grid: { color: '#27272a' } }
-            }
-        }
-    });
-}
-
 // ============================================
 // 📁 ALBUMS
 // ============================================
 function renderAlbums() {
     const container = document.getElementById('albums-list');
     let filtered = currentAlbumFilter === 'all' ? allAlbums : allAlbums.filter(a => a.status === currentAlbumFilter);
-    
-    console.log(`📁 Rendu albums: ${filtered.length} (filtre: ${currentAlbumFilter})`);
     
     if (filtered.length === 0) {
         container.innerHTML = '<div class="text-center text-zinc-500 py-8 text-xs">Aucun album</div>';
@@ -729,28 +428,26 @@ function renderAlbums() {
         const videoCount = allVideos.filter(v => v.albumId === a.id).length;
         const totalViews = allVideos.filter(v => v.albumId === a.id).reduce((s, v) => s + (v.views || 0), 0);
         const storage = allVideos.filter(v => v.albumId === a.id).reduce((s, v) => s + (v.size || 0), 0);
-        const questionCount = allQuestions.filter(q => q.albumId === a.id).length;
         
         return `
         <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 cursor-pointer hover:border-orange-500/50 transition-all fade-in" onclick="openAlbumModal('${a.id}')">
             <div class="flex items-start justify-between">
                 <div class="flex-1">
                     <div class="flex items-center gap-2 mb-1">
-                        <h3 class="text-sm font-bold text-white">${escapeHtml(a.imamName || 'Sans nom')}</h3>
+                        <h3 class="text-sm font-bold text-white">${a.imamName || 'Sans nom'}</h3>
                         ${a.suspended ? '<span class="px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 text-[9px] font-bold">SUSPENDU</span>' : ''}
                     </div>
-                    <p class="text-xs text-zinc-400"><i class="fa-solid fa-location-dot mr-1"></i>${escapeHtml(a.city || '')}, ${escapeHtml(a.country || '')}</p>
+                    <p class="text-xs text-zinc-400"><i class="fa-solid fa-location-dot mr-1"></i>${a.city || ''}, ${a.country || ''}</p>
                     <p class="text-xs mt-1" style="color:#ff5722">${TYPE_LABELS[a.type] || a.type || 'Non spécifié'}</p>
                 </div>
                 <span class="px-2 py-1 rounded text-[9px] font-bold ${a.status === 'pending' ? 'bg-yellow-500 text-zinc-950' : a.status === 'approved' ? 'bg-emerald-500 text-zinc-950' : 'bg-red-500 text-white'}">
                     ${a.status === 'pending' ? ' EN ATTENTE' : a.status === 'approved' ? '✅ APPROUVÉ' : '❌ REJETÉ'}
                 </span>
             </div>
-            <div class="flex gap-4 mt-3 text-[10px] text-zinc-500 flex-wrap">
+            <div class="flex gap-4 mt-3 text-[10px] text-zinc-500">
                 <span><i class="fa-solid fa-video"></i> ${videoCount} vidéos</span>
                 <span><i class="fa-regular fa-eye"></i> ${totalViews} vues</span>
                 <span><i class="fa-solid fa-hard-drive"></i> ${(storage / 1024 / 1024).toFixed(1)} Mo</span>
-                <span><i class="fa-solid fa-comments"></i> ${questionCount} questions</span>
             </div>
         </div>
         `;
@@ -782,15 +479,14 @@ function openAlbumModal(albumId) {
     const totalViews = videos.reduce((s, v) => s + (v.views || 0), 0);
     const totalDownloads = videos.reduce((s, v) => s + (v.downloads || 0), 0);
     const storage = videos.reduce((s, v) => s + (v.size || 0), 0);
-    const questionCount = allQuestions.filter(q => q.albumId === albumId).length;
     
     const content = document.getElementById('album-modal-content');
     content.innerHTML = `
         <div class="bg-zinc-800 rounded-lg p-3 space-y-2">
-            <h4 class="text-sm font-bold text-white">${escapeHtml(album.imamName || 'Sans nom')}</h4>
-            <p class="text-xs text-zinc-400"><i class="fa-solid fa-location-dot mr-1"></i>${escapeHtml(album.city || '')}, ${escapeHtml(album.country || '')}</p>
+            <h4 class="text-sm font-bold text-white">${album.imamName || 'Sans nom'}</h4>
+            <p class="text-xs text-zinc-400"><i class="fa-solid fa-location-dot mr-1"></i>${album.city || ''}, ${album.country || ''}</p>
             <p class="text-xs" style="color:#ff5722">${TYPE_LABELS[album.type] || album.type || 'Non spécifié'}</p>
-            ${album.description ? `<p class="text-xs text-zinc-400 mt-2">${escapeHtml(album.description)}</p>` : ''}
+            ${album.description ? `<p class="text-xs text-zinc-400 mt-2">${album.description}</p>` : ''}
         </div>
         
         <div class="grid grid-cols-2 gap-2">
@@ -810,10 +506,6 @@ function openAlbumModal(albumId) {
                 <p class="text-[9px] text-zinc-500 uppercase">Stockage</p>
                 <p class="text-lg font-bold text-purple-400">${(storage / 1024 / 1024).toFixed(1)} Mo</p>
             </div>
-            <div class="bg-zinc-800 rounded-lg p-3 text-center col-span-2">
-                <p class="text-[9px] text-zinc-500 uppercase">Questions</p>
-                <p class="text-lg font-bold text-blue-400">${questionCount}</p>
-            </div>
         </div>
         
         <div class="bg-zinc-800 rounded-lg p-3">
@@ -825,14 +517,13 @@ function openAlbumModal(albumId) {
         
         <div class="bg-zinc-800 rounded-lg p-3">
             <p class="text-[9px] text-zinc-500 uppercase mb-1">Utilisateur</p>
-            <p class="text-xs text-zinc-400 break-all">${album.userId || 'N/A'}</p>
-            ${album.userEmail ? `<p class="text-xs text-zinc-400 mt-1">📧 ${escapeHtml(album.userEmail)}</p>` : ''}
+            <p class="text-xs text-zinc-400">${album.userId || 'N/A'}</p>
         </div>
         
         ${album.rejectionReason ? `
         <div class="bg-red-900/20 border border-red-500/30 rounded-lg p-3">
             <p class="text-[9px] text-red-400 uppercase mb-1">Raison du rejet</p>
-            <p class="text-xs text-red-300">${escapeHtml(album.rejectionReason)}</p>
+            <p class="text-xs text-red-300">${album.rejectionReason}</p>
         </div>
         ` : ''}
         
@@ -863,10 +554,8 @@ function closeAlbumModal() {
 async function approveAlbum(albumId) {
     if (!confirm("Valider cet album ?")) return;
     try {
-        await db.collection('albums').doc(albumId).update({ 
-            status: 'approved', 
-            approvedAt: firebase.firestore.FieldValue.serverTimestamp() 
-        });
+        await db.collection('albums').doc(albumId).update({ status: 'approved', approvedAt: new Date() });
+        await loadData();
         closeAlbumModal();
     } catch(e) { alert("Erreur: " + e.message); }
 }
@@ -874,11 +563,8 @@ async function approveAlbum(albumId) {
 async function rejectAlbum(albumId) {
     const reason = prompt("Raison du rejet (optionnel):");
     try {
-        await db.collection('albums').doc(albumId).update({ 
-            status: 'rejected', 
-            rejectionReason: reason || '', 
-            rejectedAt: firebase.firestore.FieldValue.serverTimestamp() 
-        });
+        await db.collection('albums').doc(albumId).update({ status: 'rejected', rejectionReason: reason || '', rejectedAt: new Date() });
+        await loadData();
         closeAlbumModal();
     } catch(e) { alert("Erreur: " + e.message); }
 }
@@ -890,11 +576,8 @@ async function deleteAlbum(albumId) {
         for (const v of videos) {
             await db.collection('videos').doc(v.id).delete();
         }
-        const questions = allQuestions.filter(q => q.albumId === albumId);
-        for (const q of questions) {
-            await db.collection('questions').doc(q.id).delete();
-        }
         await db.collection('albums').doc(albumId).delete();
+        await loadData();
         closeAlbumModal();
     } catch(e) { alert("Erreur: " + e.message); }
 }
@@ -906,6 +589,7 @@ function renderImams() {
     const container = document.getElementById('imams-list');
     const search = (document.getElementById('imam-search')?.value || '').toLowerCase();
     
+    // Grouper par imam (userId)
     const imamMap = {};
     allAlbums.forEach(a => {
         if (!imamMap[a.userId]) {
@@ -913,19 +597,13 @@ function renderImams() {
         }
         imamMap[a.userId].albums.push(a);
         if (!imamMap[a.userId].imamName) imamMap[a.userId].imamName = a.imamName;
-        if (!imamMap[a.userId].userEmail) imamMap[a.userId].userEmail = a.userEmail;
     });
     
     let imams = Object.values(imamMap);
     
     if (search) {
-        imams = imams.filter(i => 
-            (i.imamName || '').toLowerCase().includes(search) ||
-            (i.userEmail || '').toLowerCase().includes(search)
-        );
+        imams = imams.filter(i => (i.imamName || '').toLowerCase().includes(search));
     }
-    
-    console.log(`👥 Rendu imams: ${imams.length}`);
     
     if (imams.length === 0) {
         container.innerHTML = '<div class="text-center text-zinc-500 py-8 text-xs">Aucun imam</div>';
@@ -936,7 +614,6 @@ function renderImams() {
         const isSuspended = i.albums.some(a => a.suspended);
         const totalVideos = allVideos.filter(v => i.albums.some(a => a.id === v.albumId)).length;
         const totalViews = allVideos.filter(v => i.albums.some(a => a.id === v.albumId)).reduce((s, v) => s + (v.views || 0), 0);
-        const totalQuestions = allQuestions.filter(q => i.albums.some(a => a.id === q.albumId)).length;
         
         return `
         <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 fade-in">
@@ -947,11 +624,10 @@ function renderImams() {
                     </div>
                     <div class="flex-1">
                         <div class="flex items-center gap-2">
-                            <h3 class="text-sm font-bold text-white">${escapeHtml(i.imamName || 'Inconnu')}</h3>
+                            <h3 class="text-sm font-bold text-white">${i.imamName || 'Inconnu'}</h3>
                             ${isSuspended ? '<span class="px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 text-[9px] font-bold">SUSPENDU</span>' : '<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[9px] font-bold">ACTIF</span>'}
                         </div>
-                        ${i.userEmail ? `<p class="text-[10px] text-zinc-500 mt-0.5">📧 ${escapeHtml(i.userEmail)}</p>` : ''}
-                        <p class="text-xs text-zinc-400 mt-1">${i.albums.length} album(s) · ${totalVideos} vidéos · ${totalViews} vues · ${totalQuestions} questions</p>
+                        <p class="text-xs text-zinc-400 mt-1">${i.albums.length} album(s) · ${totalVideos} vidéos · ${totalViews} vues</p>
                         <div class="flex gap-2 mt-2 flex-wrap">
                             ${i.albums.map(a => `
                                 <span class="px-2 py-0.5 rounded bg-zinc-800 text-[9px] text-zinc-400">${TYPE_LABELS[a.type] || a.type}</span>
@@ -978,18 +654,20 @@ async function toggleSuspend(userId) {
     const isSuspended = userAlbums.some(a => a.suspended);
     const action = isSuspended ? 'réactiver' : 'suspendre';
     
-    if (!confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} cet imam ?`)) return;
+    if (!confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} cet imam ? Il ne pourra plus téléverser de vidéos.`)) return;
     
     try {
         for (const album of userAlbums) {
             await db.collection('albums').doc(album.id).update({ suspended: !isSuspended });
         }
+        await loadData();
     } catch(e) { alert("Erreur: " + e.message); }
 }
 
 function viewImamAlbums(userId) {
     showSection('albums');
     filterAlbums('all');
+    // Scroll to first album of this user
     setTimeout(() => {
         const firstAlbum = allAlbums.find(a => a.userId === userId);
         if (firstAlbum) openAlbumModal(firstAlbum.id);
@@ -997,314 +675,11 @@ function viewImamAlbums(userId) {
 }
 
 // ============================================
-// ❓ QUESTIONS
-// ============================================
-function renderQuestions() {
-    const container = document.getElementById('questions-list');
-    const search = (document.getElementById('question-search')?.value || '').toLowerCase();
-    
-    let filtered = currentQuestionFilter === 'all' ? allQuestions : allQuestions.filter(q => q.status === currentQuestionFilter);
-    
-    if (search) {
-        filtered = filtered.filter(q => {
-            return (q.questionText || '').toLowerCase().includes(search) ||
-                   (q.userName || '').toLowerCase().includes(search) ||
-                   (q.answerText || '').toLowerCase().includes(search);
-        });
-    }
-    
-    filtered.sort((a, b) => {
-        const ta = a.timestamp ? a.timestamp.toDate() : new Date(0);
-        const tb = b.timestamp ? b.timestamp.toDate() : new Date(0);
-        return tb - ta;
-    });
-    
-    console.log(`❓ Rendu questions: ${filtered.length}`);
-    
-    if (filtered.length === 0) {
-        container.innerHTML = '<div class="text-center text-zinc-500 py-8 text-xs">Aucune question</div>';
-        return;
-    }
-    
-    container.innerHTML = filtered.map(q => {
-        const album = allAlbums.find(a => a.id === q.albumId);
-        const date = q.timestamp ? new Date(q.timestamp.toDate()).toLocaleString('fr-FR') : '';
-        
-        return `
-        <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 fade-in cursor-pointer hover:border-orange-500/50" onclick="openAnswerModal('${q.id}')">
-            <div class="flex items-start justify-between mb-2">
-                <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="text-xs font-bold text-orange-400">${escapeHtml(q.userName || 'Anonyme')}</span>
-                        ${q.status === 'pending' ? '<span class="px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400 text-[9px] font-bold">EN ATTENTE</span>' : '<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[9px] font-bold">RÉPONDUE</span>'}
-                    </div>
-                    <p class="text-[10px] text-zinc-500"><i class="fa-solid fa-photo-film mr-1"></i>${album?.imamName || 'Album inconnu'} · ${date}</p>
-                </div>
-            </div>
-            
-            <div class="bg-zinc-800 rounded-lg p-3 mb-2">
-                ${q.questionText ? `<p class="text-xs text-white">${escapeHtml(q.questionText)}</p>` : ''}
-                ${q.questionAudio ? `
-                    <div class="mt-2">
-                        <audio controls class="w-full h-8">
-                            <source src="${q.questionAudio}" type="audio/mpeg">
-                        </audio>
-                    </div>
-                ` : ''}
-            </div>
-            
-            ${q.status === 'answered' && (q.answerText || q.answerAudio) ? `
-                <div class="bg-emerald-900/20 border border-emerald-500/30 rounded-lg p-3">
-                    <p class="text-[10px] text-emerald-400 font-bold mb-1"><i class="fa-solid fa-check-circle mr-1"></i>Réponse</p>
-                    ${q.answerText ? `<p class="text-xs text-white">${escapeHtml(q.answerText)}</p>` : ''}
-                    ${q.answerAudio ? `
-                        <audio controls class="w-full h-8 mt-2">
-                            <source src="${q.answerAudio}" type="audio/mpeg">
-                        </audio>
-                    ` : ''}
-                </div>
-            ` : `
-                <div class="text-center py-2">
-                    <span class="text-[10px] text-zinc-500"><i class="fa-solid fa-reply mr-1"></i>Cliquez pour répondre</span>
-                </div>
-            `}
-        </div>
-        `;
-    }).join('');
-}
-
-function filterQuestions(filter) {
-    currentQuestionFilter = filter;
-    ['all','pending','answered'].forEach(f => {
-        const btn = document.getElementById(`q-filter-${f}`);
-        if (f === filter) {
-            btn.style.background = '#ff5722';
-            btn.classList.remove('bg-zinc-800','text-zinc-400');
-            btn.classList.add('text-white');
-        } else {
-            btn.style.background = '';
-            btn.classList.add('bg-zinc-800','text-zinc-400');
-            btn.classList.remove('text-white');
-        }
-    });
-    renderQuestions();
-}
-
-let currentAnswerQuestionId = null;
-let currentAnswerAudioBlob = null;
-let answerMediaRecorder = null;
-let answerAudioChunks = [];
-let answerRecordingTimer = null;
-let answerRecordingStart = null;
-
-function openAnswerModal(questionId) {
-    const question = allQuestions.find(q => q.id === questionId);
-    if (!question) return;
-    
-    currentAnswerQuestionId = questionId;
-    const album = allAlbums.find(a => a.id === question.albumId);
-    const date = question.timestamp ? new Date(question.timestamp.toDate()).toLocaleString('fr-FR') : '';
-    
-    const content = document.getElementById('answer-modal-content');
-    content.innerHTML = `
-        <div class="bg-zinc-800 rounded-lg p-3 space-y-2">
-            <div class="flex items-center gap-2 mb-1">
-                <span class="text-xs font-bold text-orange-400">${escapeHtml(question.userName || 'Anonyme')}</span>
-                <span class="text-[10px] text-zinc-500">${date}</span>
-            </div>
-            <p class="text-[10px] text-zinc-500"><i class="fa-solid fa-photo-film mr-1"></i>${album?.imamName || 'Album inconnu'}</p>
-            
-            ${question.questionText ? `<p class="text-sm text-white mt-2">${escapeHtml(question.questionText)}</p>` : ''}
-            ${question.questionAudio ? `
-                <audio controls class="w-full mt-2 h-10">
-                    <source src="${question.questionAudio}" type="audio/mpeg">
-                </audio>
-            ` : ''}
-        </div>
-        
-        <div class="border-t border-zinc-800 pt-3">
-            <h4 class="text-xs font-bold text-white mb-2"><i class="fa-solid fa-reply mr-1" style="color:#ff5722"></i>Votre réponse</h4>
-            
-            <textarea id="answer-text" rows="4" placeholder="Écrivez votre réponse..." class="w-full bg-zinc-800 rounded-lg px-3 py-2 text-sm text-white border border-zinc-700 focus:border-orange-500 focus:outline-none">${question.answerText || ''}</textarea>
-            
-            <div class="flex gap-2 mt-2">
-                <button onclick="startAnswerRecording()" id="btn-answer-record" class="px-3 py-2 rounded-lg text-xs font-bold bg-zinc-800 text-zinc-400 hover:text-white">
-                    <i class="fa-solid fa-microphone mr-1"></i>Enregistrer audio
-                </button>
-            </div>
-            
-            <div id="answer-recording-ui" class="hidden mt-2 flex items-center justify-between bg-zinc-800 rounded-lg p-2">
-                <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full bg-red-500 pulse-live"></div>
-                    <span class="text-[10px] text-zinc-300" id="answer-recording-timer">00:00</span>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="cancelAnswerRecording()" class="px-2 py-1 rounded bg-zinc-700 text-[10px] text-white">
-                        <i class="fa-solid fa-xmark mr-1"></i>Annuler
-                    </button>
-                    <button onclick="stopAnswerRecording()" class="px-2 py-1 rounded text-[10px] text-white" style="background:#ff5722">
-                        <i class="fa-solid fa-check mr-1"></i>Terminer
-                    </button>
-                </div>
-            </div>
-            
-            <div id="answer-audio-preview" class="hidden mt-2 flex items-center justify-between bg-zinc-800 rounded-lg p-2">
-                <audio id="answer-audio-element" controls class="flex-1 h-8"></audio>
-                <button onclick="removeAnswerAudio()" class="ml-2 text-red-400">
-                    <i class="fa-solid fa-trash text-xs"></i>
-                </button>
-            </div>
-        </div>
-        
-        <div class="flex gap-2 pt-3 border-t border-zinc-800">
-            <button onclick="sendAnswer()" class="flex-1 py-2.5 rounded-lg text-xs font-bold text-white" style="background:#ff5722">
-                <i class="fa-solid fa-paper-plane mr-1"></i>Envoyer la réponse
-            </button>
-            <button onclick="deleteQuestion('${question.id}')" class="px-4 py-2.5 rounded-lg text-xs font-bold bg-red-600 text-white">
-                <i class="fa-solid fa-trash"></i>
-            </button>
-        </div>
-    `;
-    
-    if (question.answerAudio) {
-        setTimeout(() => {
-            const preview = document.getElementById('answer-audio-preview');
-            const element = document.getElementById('answer-audio-element');
-            if (preview && element) {
-                element.src = question.answerAudio;
-                preview.classList.remove('hidden');
-            }
-        }, 100);
-    }
-    
-    document.getElementById('answer-modal').classList.remove('hidden');
-}
-
-function closeAnswerModal() {
-    document.getElementById('answer-modal').classList.add('hidden');
-    currentAnswerQuestionId = null;
-    currentAnswerAudioBlob = null;
-    if (answerMediaRecorder && answerMediaRecorder.state === 'recording') {
-        answerMediaRecorder.stop();
-    }
-}
-
-async function startAnswerRecording() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        answerMediaRecorder = new MediaRecorder(stream);
-        answerAudioChunks = [];
-        
-        answerMediaRecorder.ondataavailable = (event) => {
-            answerAudioChunks.push(event.data);
-        };
-        
-        answerMediaRecorder.onstop = () => {
-            currentAnswerAudioBlob = new Blob(answerAudioChunks, { type: 'audio/mp3' });
-            const audioUrl = URL.createObjectURL(currentAnswerAudioBlob);
-            document.getElementById('answer-audio-element').src = audioUrl;
-            document.getElementById('answer-audio-preview').classList.remove('hidden');
-            document.getElementById('answer-recording-ui').classList.add('hidden');
-            stream.getTracks().forEach(track => track.stop());
-        };
-        
-        answerMediaRecorder.start();
-        answerRecordingStart = Date.now();
-        
-        document.getElementById('answer-recording-ui').classList.remove('hidden');
-        document.getElementById('btn-answer-record').classList.add('text-red-500');
-        
-        answerRecordingTimer = setInterval(() => {
-            const elapsed = Math.floor((Date.now() - answerRecordingStart) / 1000);
-            const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
-            const secs = (elapsed % 60).toString().padStart(2, '0');
-            document.getElementById('answer-recording-timer').textContent = `${mins}:${secs}`;
-        }, 1000);
-        
-    } catch(e) {
-        console.error("Erreur enregistrement:", e);
-        alert("❌ Impossible d'accéder au microphone");
-    }
-}
-
-function stopAnswerRecording() {
-    if (answerMediaRecorder && answerMediaRecorder.state === 'recording') {
-        answerMediaRecorder.stop();
-    }
-    clearInterval(answerRecordingTimer);
-    document.getElementById('btn-answer-record').classList.remove('text-red-500');
-}
-
-function cancelAnswerRecording() {
-    if (answerMediaRecorder && answerMediaRecorder.state === 'recording') {
-        answerMediaRecorder.stop();
-        answerMediaRecorder.stream.getTracks().forEach(track => track.stop());
-    }
-    clearInterval(answerRecordingTimer);
-    answerAudioChunks = [];
-    currentAnswerAudioBlob = null;
-    document.getElementById('answer-recording-ui').classList.add('hidden');
-    document.getElementById('btn-answer-record').classList.remove('text-red-500');
-}
-
-function removeAnswerAudio() {
-    currentAnswerAudioBlob = null;
-    document.getElementById('answer-audio-preview').classList.add('hidden');
-    document.getElementById('answer-audio-element').src = '';
-}
-
-async function sendAnswer() {
-    if (!currentAnswerQuestionId) return;
-    
-    const answerText = document.getElementById('answer-text').value.trim();
-    
-    if (!answerText && !currentAnswerAudioBlob) {
-        alert("Veuillez écrire ou enregistrer une réponse");
-        return;
-    }
-    
-    try {
-        const updateData = {
-            status: 'answered',
-            answerText: answerText,
-            answeredAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
-        
-        if (currentAnswerAudioBlob) {
-            const question = allQuestions.find(q => q.id === currentAnswerQuestionId);
-            const audioRef = storage.ref(`questions/${question.albumId}/${Date.now()}_answer.mp3`);
-            await audioRef.put(currentAnswerAudioBlob);
-            updateData.answerAudio = await audioRef.getDownloadURL();
-        }
-        
-        await db.collection('questions').doc(currentAnswerQuestionId).update(updateData);
-        
-        alert("✅ Réponse envoyée avec succès !");
-        closeAnswerModal();
-        
-    } catch(e) {
-        console.error("Erreur envoi réponse:", e);
-        alert("❌ Erreur: " + e.message);
-    }
-}
-
-async function deleteQuestion(questionId) {
-    if (!confirm("Supprimer définitivement cette question ?")) return;
-    
-    try {
-        await db.collection('questions').doc(questionId).delete();
-        closeAnswerModal();
-    } catch(e) {
-        alert("Erreur: " + e.message);
-    }
-}
-
-// ============================================
 // 🧭 NAVIGATION
 // ============================================
 function showSection(section) {
     currentSection = section;
-    ['dashboard','albums','imams','questions'].forEach(s => {
+    ['dashboard','albums','imams'].forEach(s => {
         const el = document.getElementById(`section-${s}`);
         if (el) el.classList.add('hidden');
         const btn = document.getElementById(`tab-${s}`);
@@ -1324,27 +699,9 @@ function showSection(section) {
         activeBtn.classList.add('text-white');
     }
     
-    if (section === 'dashboard') {
-        renderCharts();
-        renderPendingPreview();
-        renderRecentQuestionsPreview();
-    }
+    if (section === 'dashboard') renderCharts();
     if (section === 'albums') renderAlbums();
     if (section === 'imams') renderImams();
-    if (section === 'questions') renderQuestions();
-}
-
-// ============================================
-// 🛠️ UTILS
-// ============================================
-function escapeHtml(str) {
-    if (!str) return '';
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
 }
 </script>
 </body>
