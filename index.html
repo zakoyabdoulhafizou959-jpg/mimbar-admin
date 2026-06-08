@@ -27,7 +27,15 @@
                 <h1 class="text-2xl font-black text-white">MinbarStream <span style="color:#ff5722">Admin</span></h1>
                 <p class="text-xs text-zinc-400 mt-1">Tableau de bord de gestion</p>
             </div>
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 flex-wrap">
+                <!-- ✅ NOUVEAU BOUTON : VISITER LE SITE PUBLIC -->
+                <a href="https://al-kitab-wa-as-sunna.vercel.app" target="_blank" rel="noopener noreferrer" 
+                   class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors flex items-center gap-1.5">
+                    <i class="fa-solid fa-globe"></i>
+                    <span>Voir le site public</span>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[9px] opacity-70"></i>
+                </a>
+                
                 <span class="text-xs text-zinc-400" id="admin-email"></span>
                 <button onclick="adminLogout()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-600 text-white hover:bg-red-700">
                     <i class="fa-solid fa-right-from-bracket mr-1"></i>Déconnexion
@@ -57,6 +65,11 @@
             </button>
             <button onclick="showSection('imams')" id="tab-imams" class="px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap bg-zinc-800 text-zinc-400">
                 <i class="fa-solid fa-users mr-1"></i>Imams
+            </button>
+            <!-- ✅ NOUVELLE TAB : SUPPORT -->
+            <button onclick="showSection('support')" id="tab-support" class="px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap bg-zinc-800 text-zinc-400">
+                <i class="fa-solid fa-headset mr-1"></i>Support
+                <span id="support-badge" class="ml-1 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[9px] font-bold hidden">0</span>
             </button>
         </div>
 
@@ -156,6 +169,21 @@
             </div>
             <div id="imams-list" class="space-y-3"></div>
         </div>
+
+        <!-- ✅ NOUVELLE SECTION : SUPPORT -->
+        <div id="section-support" class="hidden space-y-4 fade-in">
+            <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-headset mr-2" style="color:#ff5722"></i>Messages de support</h3>
+                    <div class="flex gap-2">
+                        <button onclick="filterSupport('all')" id="support-filter-all" class="px-3 py-1 rounded text-[10px] font-bold" style="background:#ff5722">Tous</button>
+                        <button onclick="filterSupport('new')" id="support-filter-new" class="px-3 py-1 rounded text-[10px] font-bold bg-zinc-800 text-zinc-400">Nouveaux</button>
+                        <button onclick="filterSupport('resolved')" id="support-filter-resolved" class="px-3 py-1 rounded text-[10px] font-bold bg-zinc-800 text-zinc-400">Résolus</button>
+                    </div>
+                </div>
+                <div id="support-list" class="space-y-3"></div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -170,6 +198,20 @@
         </div>
         
         <div id="album-modal-content" class="space-y-3"></div>
+    </div>
+</div>
+
+<!-- ✅ NOUVEAU MODAL : DÉTAILS SUPPORT -->
+<div id="support-modal" class="hidden fixed inset-0 bg-black/80 modal-overlay z-50 flex items-center justify-center p-4">
+    <div class="bg-zinc-900 rounded-2xl p-6 w-full max-w-lg border border-zinc-800 fade-in max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-base font-bold text-white"><i class="fa-solid fa-headset mr-2" style="color:#ff5722"></i>Détails du message</h3>
+            <button onclick="closeSupportModal()" class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        
+        <div id="support-modal-content" class="space-y-3"></div>
     </div>
 </div>
 
@@ -191,7 +233,9 @@ const db = firebase.firestore();
 
 let allAlbums = [];
 let allVideos = [];
+let allSupport = [];
 let currentAlbumFilter = 'all';
+let currentSupportFilter = 'all';
 let currentSection = 'dashboard';
 let charts = {};
 
@@ -209,6 +253,14 @@ const TYPE_COLORS = {
     'coran': '#8b5cf6'
 };
 
+const SUPPORT_SUBJECTS = {
+    'bug': '🐛 Bug',
+    'question': '❓ Question',
+    'suggestion': '💡 Suggestion',
+    'album': '📁 Problème album',
+    'other': '📝 Autre'
+};
+
 // ============================================
 // 🔐 AUTH
 // ============================================
@@ -218,6 +270,18 @@ auth.onAuthStateChanged(async (user) => {
         document.getElementById('admin-content').classList.remove('hidden');
         document.getElementById('admin-email').innerText = user.email;
         await loadData();
+        
+        // ✅ Écoute en temps réel des nouveaux messages support
+        db.collection('support').where('status', '==', 'new').onSnapshot((snapshot) => {
+            const newCount = snapshot.size;
+            const badge = document.getElementById('support-badge');
+            if (newCount > 0) {
+                badge.innerText = newCount;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        });
     } else {
         document.getElementById('admin-login').classList.remove('hidden');
         document.getElementById('admin-content').classList.add('hidden');
@@ -249,9 +313,14 @@ async function loadData() {
         allVideos = [];
         videosSnap.forEach(doc => allVideos.push({ id: doc.id, ...doc.data() }));
         
+        const supportSnap = await db.collection('support').orderBy('createdAt', 'desc').get();
+        allSupport = [];
+        supportSnap.forEach(doc => allSupport.push({ id: doc.id, ...doc.data() }));
+        
         updateDashboard();
         renderAlbums();
         renderImams();
+        renderSupport();
         renderCharts();
     } catch(e) { console.error(e); }
 }
@@ -302,7 +371,6 @@ function renderCharts() {
 function renderTypeChart() {
     const ctx = document.getElementById('chart-type');
     if (!ctx) return;
-    
     if (charts.type) charts.type.destroy();
     
     const typeCount = {};
@@ -334,7 +402,6 @@ function renderTypeChart() {
 function renderImamsChart() {
     const ctx = document.getElementById('chart-imams');
     if (!ctx) return;
-    
     if (charts.imams) charts.imams.destroy();
     
     const imamViews = {};
@@ -374,7 +441,6 @@ function renderImamsChart() {
 function renderStorageChart() {
     const ctx = document.getElementById('chart-storage');
     if (!ctx) return;
-    
     if (charts.storage) charts.storage.destroy();
     
     const imamStorage = {};
@@ -589,7 +655,6 @@ function renderImams() {
     const container = document.getElementById('imams-list');
     const search = (document.getElementById('imam-search')?.value || '').toLowerCase();
     
-    // Grouper par imam (userId)
     const imamMap = {};
     allAlbums.forEach(a => {
         if (!imamMap[a.userId]) {
@@ -654,7 +719,7 @@ async function toggleSuspend(userId) {
     const isSuspended = userAlbums.some(a => a.suspended);
     const action = isSuspended ? 'réactiver' : 'suspendre';
     
-    if (!confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} cet imam ? Il ne pourra plus téléverser de vidéos.`)) return;
+    if (!confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} cet imam ?`)) return;
     
     try {
         for (const album of userAlbums) {
@@ -667,7 +732,6 @@ async function toggleSuspend(userId) {
 function viewImamAlbums(userId) {
     showSection('albums');
     filterAlbums('all');
-    // Scroll to first album of this user
     setTimeout(() => {
         const firstAlbum = allAlbums.find(a => a.userId === userId);
         if (firstAlbum) openAlbumModal(firstAlbum.id);
@@ -675,11 +739,174 @@ function viewImamAlbums(userId) {
 }
 
 // ============================================
+// 🆘 SUPPORT
+// ============================================
+function renderSupport() {
+    const container = document.getElementById('support-list');
+    let filtered = currentSupportFilter === 'all' ? allSupport : allSupport.filter(s => s.status === currentSupportFilter);
+    
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="text-center text-zinc-500 py-8 text-xs">Aucun message</div>';
+        return;
+    }
+    
+    container.innerHTML = filtered.map(s => {
+        const date = s.createdAt?.toDate ? s.createdAt.toDate().toLocaleString('fr-FR') : 'Date inconnue';
+        const hasImages = s.images && s.images.length > 0;
+        const hasVoice = !!s.voice;
+        
+        return `
+        <div class="bg-zinc-800 rounded-lg p-3 cursor-pointer hover:bg-zinc-700 transition-colors" onclick="openSupportModal('${s.id}')">
+            <div class="flex items-start justify-between gap-2">
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-1 flex-wrap">
+                        <span class="px-2 py-0.5 rounded text-[9px] font-bold ${s.status === 'new' ? 'bg-blue-500 text-white' : 'bg-zinc-700 text-zinc-400'}">
+                            ${s.status === 'new' ? '🆕 NOUVEAU' : '✅ RÉSOLU'}
+                        </span>
+                        <span class="text-[10px] text-zinc-500">${SUPPORT_SUBJECTS[s.subject] || s.subject}</span>
+                    </div>
+                    <p class="text-xs text-white truncate">${s.message || 'Sans message'}</p>
+                    <div class="flex gap-3 mt-1 text-[10px] text-zinc-500">
+                        <span><i class="fa-solid fa-user mr-1"></i>${s.userEmail || 'Anonyme'}</span>
+                        <span><i class="fa-solid fa-clock mr-1"></i>${date}</span>
+                        ${hasImages ? '<span><i class="fa-solid fa-image mr-1 text-blue-400"></i>' + s.images.length + '</span>' : ''}
+                        ${hasVoice ? '<span><i class="fa-solid fa-microphone mr-1 text-red-400"></i>Vocal</span>' : ''}
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-zinc-500 mt-2"></i>
+            </div>
+        </div>
+        `;
+    }).join('');
+}
+
+function filterSupport(filter) {
+    currentSupportFilter = filter;
+    ['all','new','resolved'].forEach(f => {
+        const btn = document.getElementById(`support-filter-${f}`);
+        if (f === filter) {
+            btn.style.background = '#ff5722';
+            btn.classList.remove('bg-zinc-800','text-zinc-400');
+            btn.classList.add('text-white');
+        } else {
+            btn.style.background = '';
+            btn.classList.add('bg-zinc-800','text-zinc-400');
+            btn.classList.remove('text-white');
+        }
+    });
+    renderSupport();
+}
+
+function openSupportModal(supportId) {
+    const support = allSupport.find(s => s.id === supportId);
+    if (!support) return;
+    
+    const date = support.createdAt?.toDate ? support.createdAt.toDate().toLocaleString('fr-FR') : 'Date inconnue';
+    
+    const content = document.getElementById('support-modal-content');
+    content.innerHTML = `
+        <div class="bg-zinc-800 rounded-lg p-3 space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${support.status === 'new' ? 'bg-blue-500 text-white' : 'bg-zinc-700 text-zinc-400'}">
+                    ${support.status === 'new' ? '🆕 NOUVEAU' : '✅ RÉSOLU'}
+                </span>
+                <span class="text-[10px] text-zinc-500">${SUPPORT_SUBJECTS[support.subject] || support.subject}</span>
+            </div>
+            <p class="text-xs text-zinc-400"><i class="fa-solid fa-user mr-1"></i>${support.userEmail || 'Anonyme'}</p>
+            <p class="text-[10px] text-zinc-500"><i class="fa-solid fa-clock mr-1"></i>${date}</p>
+        </div>
+        
+        <div class="bg-zinc-800 rounded-lg p-3">
+            <p class="text-[9px] text-zinc-500 uppercase mb-2">Message</p>
+            <p class="text-xs text-white whitespace-pre-wrap">${support.message || 'Aucun message'}</p>
+        </div>
+        
+        ${support.images && support.images.length > 0 ? `
+        <div class="bg-zinc-800 rounded-lg p-3">
+            <p class="text-[9px] text-zinc-500 uppercase mb-2"><i class="fa-solid fa-image mr-1 text-blue-400"></i>Images (${support.images.length})</p>
+            <div class="grid grid-cols-2 gap-2">
+                ${support.images.map(url => `
+                    <a href="${url}" target="_blank" class="block">
+                        <img src="${url}" class="w-full h-32 object-cover rounded-lg border border-zinc-700 hover:border-orange-500 transition-colors">
+                    </a>
+                `).join('')}
+            </div>
+        </div>
+        ` : ''}
+        
+        ${support.voice ? `
+        <div class="bg-zinc-800 rounded-lg p-3">
+            <p class="text-[9px] text-zinc-500 uppercase mb-2"><i class="fa-solid fa-microphone mr-1 text-red-400"></i>Note vocale</p>
+            <audio controls class="w-full" style="height: 40px;">
+                <source src="${support.voice}" type="audio/webm">
+                Votre navigateur ne supporte pas l'audio.
+            </audio>
+            <a href="${support.voice}" target="_blank" class="text-[10px] text-blue-400 hover:underline mt-2 inline-block">
+                <i class="fa-solid fa-download mr-1"></i>Télécharger l'audio
+            </a>
+        </div>
+        ` : ''}
+        
+        <div class="flex gap-2 pt-2">
+            ${support.status !== 'resolved' ? `
+                <button onclick="resolveSupport('${support.id}')" class="flex-1 py-2.5 rounded-lg text-xs font-bold text-white" style="background:#10b981">
+                    <i class="fa-solid fa-check mr-1"></i>Marquer comme résolu
+                </button>
+            ` : `
+                <button onclick="reopenSupport('${support.id}')" class="flex-1 py-2.5 rounded-lg text-xs font-bold bg-blue-600 text-white">
+                    <i class="fa-solid fa-rotate-left mr-1"></i>Réouvrir
+                </button>
+            `}
+            <button onclick="deleteSupport('${support.id}')" class="px-4 py-2.5 rounded-lg text-xs font-bold bg-zinc-700 text-zinc-400">
+                <i class="fa-solid fa-trash"></i>
+            </button>
+        </div>
+    `;
+    
+    document.getElementById('support-modal').classList.remove('hidden');
+}
+
+function closeSupportModal() {
+    document.getElementById('support-modal').classList.add('hidden');
+}
+
+async function resolveSupport(supportId) {
+    try {
+        await db.collection('support').doc(supportId).update({ 
+            status: 'resolved', 
+            resolvedAt: new Date() 
+        });
+        await loadData();
+        closeSupportModal();
+    } catch(e) { alert("Erreur: " + e.message); }
+}
+
+async function reopenSupport(supportId) {
+    try {
+        await db.collection('support').doc(supportId).update({ 
+            status: 'new', 
+            resolvedAt: null 
+        });
+        await loadData();
+        closeSupportModal();
+    } catch(e) { alert("Erreur: " + e.message); }
+}
+
+async function deleteSupport(supportId) {
+    if (!confirm("Supprimer ce message ?")) return;
+    try {
+        await db.collection('support').doc(supportId).delete();
+        await loadData();
+        closeSupportModal();
+    } catch(e) { alert("Erreur: " + e.message); }
+}
+
+// ============================================
 // 🧭 NAVIGATION
 // ============================================
 function showSection(section) {
     currentSection = section;
-    ['dashboard','albums','imams'].forEach(s => {
+    ['dashboard','albums','imams','support'].forEach(s => {
         const el = document.getElementById(`section-${s}`);
         if (el) el.classList.add('hidden');
         const btn = document.getElementById(`tab-${s}`);
@@ -702,6 +929,7 @@ function showSection(section) {
     if (section === 'dashboard') renderCharts();
     if (section === 'albums') renderAlbums();
     if (section === 'imams') renderImams();
+    if (section === 'support') renderSupport();
 }
 </script>
 </body>
