@@ -14,6 +14,7 @@
         .modal-overlay { backdrop-filter: blur(4px); }
         .fade-in { animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .stat-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; }
     </style>
 </head>
 <body class="bg-zinc-950 min-h-screen">
@@ -28,7 +29,6 @@
                 <p class="text-xs text-zinc-400 mt-1">Tableau de bord de gestion</p>
             </div>
             <div class="flex items-center gap-3 flex-wrap">
-                <!-- ✅ NOUVEAU BOUTON : VISITER LE SITE PUBLIC -->
                 <a href="https://al-kitab-wa-as-sunna.vercel.app" target="_blank" rel="noopener noreferrer" 
                    class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors flex items-center gap-1.5">
                     <i class="fa-solid fa-globe"></i>
@@ -60,13 +60,15 @@
             <button onclick="showSection('dashboard')" id="tab-dashboard" class="px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap" style="background:#ff5722">
                 <i class="fa-solid fa-chart-line mr-1"></i>Dashboard
             </button>
+            <button onclick="showSection('videos')" id="tab-videos" class="px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap bg-zinc-800 text-zinc-400">
+                <i class="fa-solid fa-video mr-1"></i>Vidéos
+            </button>
             <button onclick="showSection('albums')" id="tab-albums" class="px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap bg-zinc-800 text-zinc-400">
                 <i class="fa-solid fa-photo-film mr-1"></i>Albums
             </button>
             <button onclick="showSection('imams')" id="tab-imams" class="px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap bg-zinc-800 text-zinc-400">
                 <i class="fa-solid fa-users mr-1"></i>Imams
             </button>
-            <!-- ✅ NOUVELLE TAB : SUPPORT -->
             <button onclick="showSection('support')" id="tab-support" class="px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap bg-zinc-800 text-zinc-400">
                 <i class="fa-solid fa-headset mr-1"></i>Support
                 <span id="support-badge" class="ml-1 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[9px] font-bold hidden">0</span>
@@ -76,7 +78,7 @@
         <!-- SECTION DASHBOARD -->
         <div id="section-dashboard" class="space-y-6 fade-in">
             <!-- Stats Cards -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
                 <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
                     <div class="flex items-center justify-between mb-2">
                         <i class="fa-solid fa-photo-film text-2xl" style="color:#ff5722"></i>
@@ -100,20 +102,29 @@
 
                 <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
                     <div class="flex items-center justify-between mb-2">
+                        <i class="fa-solid fa-eye text-2xl text-cyan-500"></i>
+                        <span class="text-[10px] text-emerald-400 font-bold">VUES</span>
+                    </div>
+                    <p class="text-2xl font-black text-white" id="stat-views">0</p>
+                    <p class="text-[10px] text-zinc-500 mt-1">Total vues</p>
+                </div>
+
+                <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
+                    <div class="flex items-center justify-between mb-2">
+                        <i class="fa-solid fa-download text-2xl text-orange-500"></i>
+                        <span class="text-[10px] text-emerald-400 font-bold">DL</span>
+                    </div>
+                    <p class="text-2xl font-black text-white" id="stat-downloads">0</p>
+                    <p class="text-[10px] text-zinc-500 mt-1">Téléchargements</p>
+                </div>
+
+                <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
+                    <div class="flex items-center justify-between mb-2">
                         <i class="fa-solid fa-hard-drive text-2xl text-purple-500"></i>
                         <span class="text-[10px] text-emerald-400 font-bold">STOCKAGE</span>
                     </div>
                     <p class="text-2xl font-black text-white" id="stat-storage">0</p>
                     <p class="text-[10px] text-zinc-500 mt-1">Mo utilisés</p>
-                </div>
-
-                <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
-                    <div class="flex items-center justify-between mb-2">
-                        <i class="fa-solid fa-users text-2xl text-cyan-500"></i>
-                        <span class="text-[10px] text-emerald-400 font-bold">IMAMS</span>
-                    </div>
-                    <p class="text-2xl font-black text-white" id="stat-imams">0</p>
-                    <p class="text-[10px] text-zinc-500 mt-1"><span id="stat-suspended" class="text-red-400">0</span> suspendus</p>
                 </div>
             </div>
 
@@ -134,6 +145,19 @@
                 </div>
             </div>
 
+            <!-- Top Vidéos -->
+            <div class="grid md:grid-cols-2 gap-4">
+                <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
+                    <h3 class="text-sm font-bold text-white mb-3"><i class="fa-solid fa-eye mr-2 text-cyan-500"></i>Top 5 Vidéos (Vues)</h3>
+                    <div id="top-videos-views" class="space-y-2"></div>
+                </div>
+
+                <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
+                    <h3 class="text-sm font-bold text-white mb-3"><i class="fa-solid fa-download mr-2 text-orange-500"></i>Top 5 Vidéos (Téléchargements)</h3>
+                    <div id="top-videos-downloads" class="space-y-2"></div>
+                </div>
+            </div>
+
             <!-- Répartition stockage -->
             <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
                 <h3 class="text-sm font-bold text-white mb-3"><i class="fa-solid fa-hard-drive mr-2" style="color:#ff5722"></i>Répartition du stockage par Imam</h3>
@@ -146,6 +170,51 @@
             <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
                 <h3 class="text-sm font-bold text-white mb-3"><i class="fa-solid fa-clock mr-2 text-yellow-500"></i>Albums en attente de validation</h3>
                 <div id="pending-preview" class="space-y-2"></div>
+            </div>
+        </div>
+
+        <!-- ✅ NOUVELLE SECTION : VIDÉOS -->
+        <div id="section-videos" class="hidden space-y-4 fade-in">
+            <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
+                <div class="flex flex-wrap gap-2 items-center justify-between mb-4">
+                    <div class="flex gap-2 flex-wrap">
+                        <button onclick="sortVideos('date')" id="sort-date" class="px-3 py-1.5 rounded-lg text-xs font-bold" style="background:#ff5722">
+                            <i class="fa-solid fa-calendar mr-1"></i>Récent
+                        </button>
+                        <button onclick="sortVideos('views')" id="sort-views" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-zinc-800 text-zinc-400">
+                            <i class="fa-solid fa-eye mr-1"></i>Plus vues
+                        </button>
+                        <button onclick="sortVideos('downloads')" id="sort-downloads" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-zinc-800 text-zinc-400">
+                            <i class="fa-solid fa-download mr-1"></i>Plus téléchargées
+                        </button>
+                        <button onclick="sortVideos('size')" id="sort-size" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-zinc-800 text-zinc-400">
+                            <i class="fa-solid fa-weight-hanging mr-1"></i>Taille
+                        </button>
+                    </div>
+                    <input type="text" id="video-search" oninput="renderVideos()" placeholder="🔍 Rechercher..." class="bg-zinc-800 rounded-lg px-3 py-1.5 text-xs text-white border border-zinc-700 focus:outline-none focus:border-orange-500">
+                </div>
+                
+                <!-- Stats globales vidéos -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+                    <div class="bg-zinc-800 rounded-lg p-3 text-center">
+                        <p class="text-[9px] text-zinc-500 uppercase">Total Vidéos</p>
+                        <p class="text-lg font-bold text-white" id="videos-total-count">0</p>
+                    </div>
+                    <div class="bg-zinc-800 rounded-lg p-3 text-center">
+                        <p class="text-[9px] text-zinc-500 uppercase">Total Vues</p>
+                        <p class="text-lg font-bold text-cyan-400" id="videos-total-views">0</p>
+                    </div>
+                    <div class="bg-zinc-800 rounded-lg p-3 text-center">
+                        <p class="text-[9px] text-zinc-500 uppercase">Total DL</p>
+                        <p class="text-lg font-bold text-orange-400" id="videos-total-downloads">0</p>
+                    </div>
+                    <div class="bg-zinc-800 rounded-lg p-3 text-center">
+                        <p class="text-[9px] text-zinc-500 uppercase">Stockage Total</p>
+                        <p class="text-lg font-bold text-purple-400" id="videos-total-storage">0 Mo</p>
+                    </div>
+                </div>
+                
+                <div id="videos-list" class="space-y-3"></div>
             </div>
         </div>
 
@@ -170,7 +239,7 @@
             <div id="imams-list" class="space-y-3"></div>
         </div>
 
-        <!-- ✅ NOUVELLE SECTION : SUPPORT -->
+        <!-- SECTION SUPPORT -->
         <div id="section-support" class="hidden space-y-4 fade-in">
             <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
                 <div class="flex items-center justify-between mb-3">
@@ -201,7 +270,21 @@
     </div>
 </div>
 
-<!-- ✅ NOUVEAU MODAL : DÉTAILS SUPPORT -->
+<!-- ✅ NOUVEAU MODAL : DÉTAILS VIDÉO -->
+<div id="video-modal" class="hidden fixed inset-0 bg-black/80 modal-overlay z-50 flex items-center justify-center p-4">
+    <div class="bg-zinc-900 rounded-2xl p-6 w-full max-w-lg border border-zinc-800 fade-in max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-base font-bold text-white"><i class="fa-solid fa-video mr-2" style="color:#ff5722"></i>Détails de la vidéo</h3>
+            <button onclick="closeVideoModal()" class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        
+        <div id="video-modal-content" class="space-y-3"></div>
+    </div>
+</div>
+
+<!-- MODAL DÉTAILS SUPPORT -->
 <div id="support-modal" class="hidden fixed inset-0 bg-black/80 modal-overlay z-50 flex items-center justify-center p-4">
     <div class="bg-zinc-900 rounded-2xl p-6 w-full max-w-lg border border-zinc-800 fade-in max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-4">
@@ -236,6 +319,7 @@ let allVideos = [];
 let allSupport = [];
 let currentAlbumFilter = 'all';
 let currentSupportFilter = 'all';
+let currentVideoSort = 'date';
 let currentSection = 'dashboard';
 let charts = {};
 
@@ -271,7 +355,6 @@ auth.onAuthStateChanged(async (user) => {
         document.getElementById('admin-email').innerText = user.email;
         await loadData();
         
-        // ✅ Écoute en temps réel des nouveaux messages support
         db.collection('support').where('status', '==', 'new').onSnapshot((snapshot) => {
             const newCount = snapshot.size;
             const badge = document.getElementById('support-badge');
@@ -319,6 +402,7 @@ async function loadData() {
         
         updateDashboard();
         renderAlbums();
+        renderVideos();
         renderImams();
         renderSupport();
         renderCharts();
@@ -328,6 +412,12 @@ async function loadData() {
 function updateDashboard() {
     document.getElementById('stat-albums').innerText = allAlbums.length;
     document.getElementById('stat-videos').innerText = allVideos.length;
+    
+    // ✅ NOUVELLES STATS : VUES ET TÉLÉCHARGEMENTS
+    const totalViews = allVideos.reduce((s, v) => s + (v.views || 0), 0);
+    const totalDownloads = allVideos.reduce((s, v) => s + (v.downloads || 0), 0);
+    document.getElementById('stat-views').innerText = totalViews.toLocaleString('fr-FR');
+    document.getElementById('stat-downloads').innerText = totalDownloads.toLocaleString('fr-FR');
     
     const totalStorage = allVideos.reduce((s, v) => s + (v.size || 0), 0);
     document.getElementById('stat-storage').innerText = (totalStorage / 1024 / 1024).toFixed(1);
@@ -340,6 +430,44 @@ function updateDashboard() {
     
     const progress = (allAlbums.length / 20) * 100;
     document.getElementById('albums-progress').style.width = `${Math.min(progress, 100)}%`;
+    
+    // ✅ TOP VIDÉOS (VUES)
+    const topByViews = [...allVideos].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5);
+    document.getElementById('top-videos-views').innerHTML = topByViews.length === 0 
+        ? '<p class="text-center text-zinc-500 text-xs py-4">Aucune vidéo</p>'
+        : topByViews.map((v, i) => {
+            const album = allAlbums.find(a => a.id === v.albumId);
+            return `
+            <div class="bg-zinc-800 rounded-lg p-3 flex items-center gap-3 cursor-pointer hover:bg-zinc-700 transition-colors" onclick="openVideoModal('${v.id}')">
+                <span class="text-lg font-black" style="color:#ff5722">#${i+1}</span>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-bold text-white truncate">${v.title || 'Sans titre'}</p>
+                    <p class="text-[10px] text-zinc-400">${album?.imamName || 'Inconnu'}</p>
+                </div>
+                <span class="stat-badge bg-cyan-500/20 text-cyan-400">
+                    <i class="fa-solid fa-eye"></i> ${(v.views || 0).toLocaleString('fr-FR')}
+                </span>
+            </div>`;
+        }).join('');
+    
+    // ✅ TOP VIDÉOS (TÉLÉCHARGEMENTS)
+    const topByDownloads = [...allVideos].sort((a, b) => (b.downloads || 0) - (a.downloads || 0)).slice(0, 5);
+    document.getElementById('top-videos-downloads').innerHTML = topByDownloads.length === 0 
+        ? '<p class="text-center text-zinc-500 text-xs py-4">Aucune vidéo</p>'
+        : topByDownloads.map((v, i) => {
+            const album = allAlbums.find(a => a.id === v.albumId);
+            return `
+            <div class="bg-zinc-800 rounded-lg p-3 flex items-center gap-3 cursor-pointer hover:bg-zinc-700 transition-colors" onclick="openVideoModal('${v.id}')">
+                <span class="text-lg font-black" style="color:#ff5722">#${i+1}</span>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-bold text-white truncate">${v.title || 'Sans titre'}</p>
+                    <p class="text-[10px] text-zinc-400">${album?.imamName || 'Inconnu'}</p>
+                </div>
+                <span class="stat-badge bg-orange-500/20 text-orange-400">
+                    <i class="fa-solid fa-download"></i> ${(v.downloads || 0).toLocaleString('fr-FR')}
+                </span>
+            </div>`;
+        }).join('');
     
     // Aperçu albums en attente
     const pending = allAlbums.filter(a => a.status === 'pending');
@@ -357,6 +485,266 @@ function updateDashboard() {
             </div>
         `).join('');
     }
+}
+
+// ============================================
+// 📹 VIDÉOS - NOUVELLE SECTION
+// ============================================
+function renderVideos() {
+    const container = document.getElementById('videos-list');
+    const search = (document.getElementById('video-search')?.value || '').toLowerCase();
+    
+    // Stats globales
+    document.getElementById('videos-total-count').innerText = allVideos.length;
+    const totalViews = allVideos.reduce((s, v) => s + (v.views || 0), 0);
+    const totalDownloads = allVideos.reduce((s, v) => s + (v.downloads || 0), 0);
+    const totalStorage = allVideos.reduce((s, v) => s + (v.size || 0), 0);
+    document.getElementById('videos-total-views').innerText = totalViews.toLocaleString('fr-FR');
+    document.getElementById('videos-total-downloads').innerText = totalDownloads.toLocaleString('fr-FR');
+    document.getElementById('videos-total-storage').innerText = (totalStorage / 1024 / 1024).toFixed(1) + ' Mo';
+    
+    let filtered = [...allVideos];
+    
+    // Recherche
+    if (search) {
+        filtered = filtered.filter(v => {
+            const album = allAlbums.find(a => a.id === v.albumId);
+            return (v.title || '').toLowerCase().includes(search) || 
+                   (v.speaker || '').toLowerCase().includes(search) ||
+                   (album?.imamName || '').toLowerCase().includes(search);
+        });
+    }
+    
+    // Tri
+    switch(currentVideoSort) {
+        case 'views':
+            filtered.sort((a, b) => (b.views || 0) - (a.views || 0));
+            break;
+        case 'downloads':
+            filtered.sort((a, b) => (b.downloads || 0) - (a.downloads || 0));
+            break;
+        case 'size':
+            filtered.sort((a, b) => (b.size || 0) - (a.size || 0));
+            break;
+        case 'date':
+        default:
+            filtered.sort((a, b) => {
+                const dateA = a.uploadedAt?.toDate ? a.uploadedAt.toDate().getTime() : 0;
+                const dateB = b.uploadedAt?.toDate ? b.uploadedAt.toDate().getTime() : 0;
+                return dateB - dateA;
+            });
+    }
+    
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="text-center text-zinc-500 py-8 text-xs">Aucune vidéo trouvée</div>';
+        return;
+    }
+    
+    container.innerHTML = filtered.map(v => {
+        const album = allAlbums.find(a => a.id === v.albumId);
+        const date = v.uploadedAt?.toDate ? v.uploadedAt.toDate().toLocaleDateString('fr-FR') : 'Date inconnue';
+        const sizeMo = ((v.size || 0) / 1024 / 1024).toFixed(1);
+        const views = (v.views || 0).toLocaleString('fr-FR');
+        const downloads = (v.downloads || 0).toLocaleString('fr-FR');
+        const typeColor = TYPE_COLORS[v.videoType] || '#71717a';
+        const typeLabel = TYPE_LABELS[v.videoType] || v.videoType || 'Inconnu';
+        const thumb = v.thumbnail || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgwIiBoZWlnaHQ9IjI3MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDgwIiBoZWlnaHQ9IjI3MCIgZmlsbD0iIzE4MTgxYiIvPjxjaXJjbGUgY3g9IjI0MCIgY3k9IjEzNSIgcj0iNDAiIGZpbGw9IiNmZjU3MjIiLz48cG9seWdvbiBwb2ludHM9IjIyNSwxMTUgMjI1LDE1NSAyNjUsMTM1IiBmaWxsPSIjZmZmIi8+PC9zdmc+';
+        
+        return `
+        <div class="bg-zinc-800 rounded-xl p-3 border border-zinc-700 hover:border-orange-500/50 transition-all fade-in cursor-pointer" onclick="openVideoModal('${v.id}')">
+            <div class="flex gap-3">
+                <!-- Miniature -->
+                <div class="relative shrink-0 w-32 h-20 rounded-lg overflow-hidden bg-zinc-900">
+                    <img src="${thumb}" class="w-full h-full object-cover" onerror="this.style.display='none'">
+                    <div class="absolute bottom-1 right-1 bg-black/80 text-white text-[9px] px-1 rounded font-bold">${v.duration || '00:00'}</div>
+                </div>
+                
+                <!-- Infos -->
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-start justify-between gap-2 mb-1">
+                        <h4 class="text-sm font-bold text-white truncate">${v.title || 'Sans titre'}</h4>
+                        <span class="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-bold" style="background:${typeColor}20;color:${typeColor};border:1px solid ${typeColor}40">
+                            ${typeLabel}
+                        </span>
+                    </div>
+                    <p class="text-[10px] text-zinc-400 mb-2">
+                        <i class="fa-solid fa-user mr-1"></i>${album?.imamName || v.speaker || 'Inconnu'}
+                        <span class="mx-1">•</span>
+                        <i class="fa-solid fa-calendar mr-1"></i>${date}
+                    </p>
+                    
+                    <!-- Stats -->
+                    <div class="flex gap-2 flex-wrap">
+                        <span class="stat-badge bg-cyan-500/20 text-cyan-400">
+                            <i class="fa-solid fa-eye"></i> ${views}
+                        </span>
+                        <span class="stat-badge bg-orange-500/20 text-orange-400">
+                            <i class="fa-solid fa-download"></i> ${downloads}
+                        </span>
+                        <span class="stat-badge bg-purple-500/20 text-purple-400">
+                            <i class="fa-solid fa-hard-drive"></i> ${sizeMo} Mo
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+    }).join('');
+}
+
+function sortVideos(sort) {
+    currentVideoSort = sort;
+    ['date','views','downloads','size'].forEach(s => {
+        const btn = document.getElementById(`sort-${s}`);
+        if (s === sort) {
+            btn.style.background = '#ff5722';
+            btn.classList.remove('bg-zinc-800','text-zinc-400');
+            btn.classList.add('text-white');
+        } else {
+            btn.style.background = '';
+            btn.classList.add('bg-zinc-800','text-zinc-400');
+            btn.classList.remove('text-white');
+        }
+    });
+    renderVideos();
+}
+
+function openVideoModal(videoId) {
+    const video = allVideos.find(v => v.id === videoId);
+    if (!video) return;
+    
+    const album = allAlbums.find(a => a.id === video.albumId);
+    const date = video.uploadedAt?.toDate ? video.uploadedAt.toDate().toLocaleString('fr-FR') : 'Date inconnue';
+    const sizeMo = ((video.size || 0) / 1024 / 1024).toFixed(1);
+    const views = (video.views || 0).toLocaleString('fr-FR');
+    const downloads = (video.downloads || 0).toLocaleString('fr-FR');
+    const typeColor = TYPE_COLORS[video.videoType] || '#71717a';
+    const typeLabel = TYPE_LABELS[video.videoType] || video.videoType || 'Inconnu';
+    const thumb = video.thumbnail || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgwIiBoZWlnaHQ9IjI3MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDgwIiBoZWlnaHQ9IjI3MCIgZmlsbD0iIzE4MTgxYiIvPjxjaXJjbGUgY3g9IjI0MCIgY3k9IjEzNSIgcj0iNDAiIGZpbGw9IiNmZjU3MjIiLz48cG9seWdvbiBwb2ludHM9IjIyNSwxMTUgMjI1LDE1NSAyNjUsMTM1IiBmaWxsPSIjZmZmIi8+PC9zdmc+';
+    
+    const content = document.getElementById('video-modal-content');
+    content.innerHTML = `
+        <!-- Miniature -->
+        <div class="relative rounded-xl overflow-hidden bg-zinc-800 aspect-video">
+            <img src="${thumb}" class="w-full h-full object-cover" onerror="this.style.display='none'">
+            <div class="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded font-bold">${video.duration || '00:00'}</div>
+        </div>
+        
+        <!-- Titre et Type -->
+        <div class="bg-zinc-800 rounded-lg p-3 space-y-2">
+            <h4 class="text-sm font-bold text-white">${video.title || 'Sans titre'}</h4>
+            <div class="flex items-center gap-2 flex-wrap">
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold" style="background:${typeColor}20;color:${typeColor};border:1px solid ${typeColor}40">
+                    ${typeLabel}
+                </span>
+                <span class="text-[10px] text-zinc-500"><i class="fa-solid fa-calendar mr-1"></i>${date}</span>
+            </div>
+        </div>
+        
+        <!-- Imam et Album -->
+        <div class="bg-zinc-800 rounded-lg p-3">
+            <p class="text-[9px] text-zinc-500 uppercase mb-1">Imam / Album</p>
+            <p class="text-xs text-white font-bold">${album?.imamName || video.speaker || 'Inconnu'}</p>
+            <p class="text-[10px] text-zinc-400 mt-1">
+                <i class="fa-solid fa-location-dot mr-1"></i>${album?.city || 'N/A'}, ${album?.country || 'N/A'}
+            </p>
+        </div>
+        
+        <!-- Statistiques détaillées -->
+        <div class="bg-zinc-800 rounded-lg p-3">
+            <p class="text-[9px] text-zinc-500 uppercase mb-2">Statistiques</p>
+            <div class="grid grid-cols-2 gap-2">
+                <div class="bg-zinc-900 rounded-lg p-3 text-center">
+                    <i class="fa-solid fa-eye text-cyan-400 mb-1"></i>
+                    <p class="text-lg font-black text-white">${views}</p>
+                    <p class="text-[9px] text-zinc-500 uppercase">Vues</p>
+                </div>
+                <div class="bg-zinc-900 rounded-lg p-3 text-center">
+                    <i class="fa-solid fa-download text-orange-400 mb-1"></i>
+                    <p class="text-lg font-black text-white">${downloads}</p>
+                    <p class="text-[9px] text-zinc-500 uppercase">Téléchargements</p>
+                </div>
+                <div class="bg-zinc-900 rounded-lg p-3 text-center">
+                    <i class="fa-solid fa-hard-drive text-purple-400 mb-1"></i>
+                    <p class="text-lg font-black text-white">${sizeMo}</p>
+                    <p class="text-[9px] text-zinc-500 uppercase">Mo</p>
+                </div>
+                <div class="bg-zinc-900 rounded-lg p-3 text-center">
+                    <i class="fa-solid fa-clock text-emerald-400 mb-1"></i>
+                    <p class="text-lg font-black text-white">${video.duration || '00:00'}</p>
+                    <p class="text-[9px] text-zinc-500 uppercase">Durée</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Informations techniques -->
+        <div class="bg-zinc-800 rounded-lg p-3">
+            <p class="text-[9px] text-zinc-500 uppercase mb-2">Informations techniques</p>
+            <div class="space-y-1 text-[10px]">
+                <div class="flex justify-between">
+                    <span class="text-zinc-400">ID Vidéo:</span>
+                    <span class="text-white font-mono">${video.id.substring(0, 12)}...</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-zinc-400">Stockage:</span>
+                    <span class="text-white">${video.storage || 'N/A'}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-zinc-400">CDN:</span>
+                    <span class="text-white">${video.cdn || 'N/A'}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-zinc-400">Méthode upload:</span>
+                    <span class="text-white">${video.uploadMethod || 'N/A'}</span>
+                </div>
+                ${video.downloadURL ? `
+                <div class="flex justify-between items-center">
+                    <span class="text-zinc-400">URL:</span>
+                    <a href="${video.downloadURL}" target="_blank" class="text-blue-400 hover:underline truncate max-w-[200px]">
+                        <i class="fa-solid fa-external-link mr-1"></i>Voir
+                    </a>
+                </div>
+                ` : ''}
+            </div>
+        </div>
+        
+        <!-- Actions -->
+        <div class="flex gap-2 pt-2">
+            <button onclick="resetVideoStats('${video.id}')" class="flex-1 py-2.5 rounded-lg text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+                <i class="fa-solid fa-rotate-left mr-1"></i>Réinitialiser stats
+            </button>
+            <button onclick="deleteVideo('${video.id}')" class="px-4 py-2.5 rounded-lg text-xs font-bold bg-red-600 text-white hover:bg-red-700 transition-colors">
+                <i class="fa-solid fa-trash"></i>
+            </button>
+        </div>
+    `;
+    
+    document.getElementById('video-modal').classList.remove('hidden');
+}
+
+function closeVideoModal() {
+    document.getElementById('video-modal').classList.add('hidden');
+}
+
+async function resetVideoStats(videoId) {
+    if (!confirm("Réinitialiser les vues et téléchargements à 0 ?")) return;
+    try {
+        await db.collection('videos').doc(videoId).update({
+            views: 0,
+            downloads: 0
+        });
+        await loadData();
+        closeVideoModal();
+    } catch(e) { alert("Erreur: " + e.message); }
+}
+
+async function deleteVideo(videoId) {
+    if (!confirm("Supprimer définitivement cette vidéo ?")) return;
+    try {
+        await db.collection('videos').doc(videoId).delete();
+        await loadData();
+        closeVideoModal();
+    } catch(e) { alert("Erreur: " + e.message); }
 }
 
 // ============================================
@@ -491,9 +879,11 @@ function renderAlbums() {
     }
     
     container.innerHTML = filtered.map(a => {
-        const videoCount = allVideos.filter(v => v.albumId === a.id).length;
-        const totalViews = allVideos.filter(v => v.albumId === a.id).reduce((s, v) => s + (v.views || 0), 0);
-        const storage = allVideos.filter(v => v.albumId === a.id).reduce((s, v) => s + (v.size || 0), 0);
+        const videos = allVideos.filter(v => v.albumId === a.id);
+        const videoCount = videos.length;
+        const totalViews = videos.reduce((s, v) => s + (v.views || 0), 0);
+        const totalDownloads = videos.reduce((s, v) => s + (v.downloads || 0), 0);
+        const storage = videos.reduce((s, v) => s + (v.size || 0), 0);
         
         return `
         <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 cursor-pointer hover:border-orange-500/50 transition-all fade-in" onclick="openAlbumModal('${a.id}')">
@@ -510,9 +900,10 @@ function renderAlbums() {
                     ${a.status === 'pending' ? ' EN ATTENTE' : a.status === 'approved' ? '✅ APPROUVÉ' : '❌ REJETÉ'}
                 </span>
             </div>
-            <div class="flex gap-4 mt-3 text-[10px] text-zinc-500">
+            <div class="flex gap-4 mt-3 text-[10px] text-zinc-500 flex-wrap">
                 <span><i class="fa-solid fa-video"></i> ${videoCount} vidéos</span>
-                <span><i class="fa-regular fa-eye"></i> ${totalViews} vues</span>
+                <span><i class="fa-regular fa-eye"></i> ${totalViews.toLocaleString('fr-FR')} vues</span>
+                <span><i class="fa-solid fa-download"></i> ${totalDownloads.toLocaleString('fr-FR')} DL</span>
                 <span><i class="fa-solid fa-hard-drive"></i> ${(storage / 1024 / 1024).toFixed(1)} Mo</span>
             </div>
         </div>
@@ -562,11 +953,11 @@ function openAlbumModal(albumId) {
             </div>
             <div class="bg-zinc-800 rounded-lg p-3 text-center">
                 <p class="text-[9px] text-zinc-500 uppercase">Vues</p>
-                <p class="text-lg font-bold text-emerald-400">${totalViews}</p>
+                <p class="text-lg font-bold text-cyan-400">${totalViews.toLocaleString('fr-FR')}</p>
             </div>
             <div class="bg-zinc-800 rounded-lg p-3 text-center">
                 <p class="text-[9px] text-zinc-500 uppercase">Téléchargements</p>
-                <p class="text-lg font-bold text-orange-400">${totalDownloads}</p>
+                <p class="text-lg font-bold text-orange-400">${totalDownloads.toLocaleString('fr-FR')}</p>
             </div>
             <div class="bg-zinc-800 rounded-lg p-3 text-center">
                 <p class="text-[9px] text-zinc-500 uppercase">Stockage</p>
@@ -679,6 +1070,7 @@ function renderImams() {
         const isSuspended = i.albums.some(a => a.suspended);
         const totalVideos = allVideos.filter(v => i.albums.some(a => a.id === v.albumId)).length;
         const totalViews = allVideos.filter(v => i.albums.some(a => a.id === v.albumId)).reduce((s, v) => s + (v.views || 0), 0);
+        const totalDownloads = allVideos.filter(v => i.albums.some(a => a.id === v.albumId)).reduce((s, v) => s + (v.downloads || 0), 0);
         
         return `
         <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 fade-in">
@@ -692,7 +1084,11 @@ function renderImams() {
                             <h3 class="text-sm font-bold text-white">${i.imamName || 'Inconnu'}</h3>
                             ${isSuspended ? '<span class="px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 text-[9px] font-bold">SUSPENDU</span>' : '<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[9px] font-bold">ACTIF</span>'}
                         </div>
-                        <p class="text-xs text-zinc-400 mt-1">${i.albums.length} album(s) · ${totalVideos} vidéos · ${totalViews} vues</p>
+                        <p class="text-xs text-zinc-400 mt-1">${i.albums.length} album(s) · ${totalVideos} vidéos</p>
+                        <div class="flex gap-2 mt-1 flex-wrap text-[10px]">
+                            <span class="stat-badge bg-cyan-500/20 text-cyan-400"><i class="fa-solid fa-eye"></i> ${totalViews.toLocaleString('fr-FR')} vues</span>
+                            <span class="stat-badge bg-orange-500/20 text-orange-400"><i class="fa-solid fa-download"></i> ${totalDownloads.toLocaleString('fr-FR')} DL</span>
+                        </div>
                         <div class="flex gap-2 mt-2 flex-wrap">
                             ${i.albums.map(a => `
                                 <span class="px-2 py-0.5 rounded bg-zinc-800 text-[9px] text-zinc-400">${TYPE_LABELS[a.type] || a.type}</span>
@@ -906,7 +1302,7 @@ async function deleteSupport(supportId) {
 // ============================================
 function showSection(section) {
     currentSection = section;
-    ['dashboard','albums','imams','support'].forEach(s => {
+    ['dashboard','videos','albums','imams','support'].forEach(s => {
         const el = document.getElementById(`section-${s}`);
         if (el) el.classList.add('hidden');
         const btn = document.getElementById(`tab-${s}`);
@@ -927,6 +1323,7 @@ function showSection(section) {
     }
     
     if (section === 'dashboard') renderCharts();
+    if (section === 'videos') renderVideos();
     if (section === 'albums') renderAlbums();
     if (section === 'imams') renderImams();
     if (section === 'support') renderSupport();
